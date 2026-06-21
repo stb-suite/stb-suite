@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok
 
 import os
 import argparse
@@ -110,11 +110,11 @@ def main():
     print("\n" + color_text("STRAIN:", 'bold'))
     print("-"*60)
     
-    print(f"[INFO] Detected strain type: {strain_type} (from direction '{args.stdir}')")
-    print(f"[INFO] Strain direction: {norm_dir}")
-    print(f"[INFO] Strain range: {args.stmin}% to {args.stmax}% with step {args.step}%")
-    print("[INFO] Read file")
-    print("[INFO] Generating FDF files with strain...")
+    print_info(f"Detected strain type: {strain_type} (from direction '{args.stdir}')")
+    print_info(f"Strain direction: {norm_dir}")
+    print_info(f"Strain range: {args.stmin}% to {args.stmax}% with step {args.step}%")
+    print_info("Read file")
+    print_info("Generating FDF files with strain...")
 
     with open(args.file, "r") as f:
         lines = f.readlines()
@@ -152,9 +152,9 @@ def main():
         output_fdf = os.path.join(folder, args.file)
         with open(output_fdf, "w") as f:
             f.writelines(new_lines)
-        print(f"[OK] Generated: {output_fdf} (strain: {strain*100:.1f}%)")
+        print_ok(f"Generated: {output_fdf} (strain: {strain*100:.1f}%)")
         
-    print("[INFO] Complete job!") 
+    print_info("Complete job!") 
     print("\n"+"-"*60)
     print(color_text("This lattice has more tension than my last Zoom meeting.\n\n", 'bold'))        
 

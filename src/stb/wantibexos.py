@@ -12,7 +12,7 @@ import textwrap
 import numpy as np
 import sisl
 from typing import Tuple
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok, print_warn
 
 try:
     from importlib.metadata import version as _pkg_version
@@ -284,7 +284,7 @@ def main():
         show_intro()
         print("\n" + color_text("SIESTA-WANTIBEXOS Interface:", 'bold'))
         print("-"*60)
-        print(color_text("[INFO] Initializing Hamiltonian processing...", 'yellow'))
+        print_info("Initializing Hamiltonian processing...")
     
     try:
         # Get system label (although not used directly by sisl.get_sile)
@@ -293,50 +293,52 @@ def main():
         # Load SIESTA Hamiltonian
         
         # CORRECTION 1: Use args.input to read geometry, not "calc.fdf"
-        print(f"[INFO] Reading geometry from: {args.input}")
+        print_info(f"Reading geometry from: {args.input}")
         geom = sisl.get_sile(args.input).read_geometry()
-        print("[OK] Read geometry")
+        print_ok("Read geometry")
         
-        print(f"[INFO] Reading Hamiltonian from: {args.input}")
+        print_info(f"Reading Hamiltonian from: {args.input}")
         ham = sisl.get_sile(args.input).read_hamiltonian(geometry=geom)
-        print("[OK] Read Hamiltonian from SIESTA")
+        print_ok("Read Hamiltonian from SIESTA")
 
         # CORRECTION 2: Pass the entire str(ham.spin) string to the function
         # The spin_mapping function is already prepared for this.
         spin_type_str = str(ham.spin)
         spin_suffix, spin_factor = spin_mapping(spin_type_str)
-        print(f"[OK] Determine the spin type calculation: {spin_suffix} (Spin factor: {spin_factor})")
+        print_ok(f"Determine the spin type calculation: {spin_suffix} (Spin factor: {spin_factor})")
         
         # Get Fermi energy
         fermi = 0.0
         if args.fermi_level is not None:
             fermi = args.fermi_level
-            print(f"[OK] Using manual Fermi Energy ( {fermi} eV )")
+            print_ok(f"Using manual Fermi Energy ( {fermi} eV )")
         elif args.output is not None:
-            print(f"[INFO] Reading Fermi energy from: {args.output}")
+            print_info(f"Reading Fermi energy from: {args.output}")
             fermi = get_fermi_energy(args.output)
-            print(f"[OK] Read the Fermi Energy ( {fermi} eV )")
+            print_ok(f"Read the Fermi Energy ( {fermi} eV )")
         else:
-            print(f"[WARN] No output file (-o) or manual Fermi level (-f) provided. Using Fermi = 0.0 eV")
+            print_warn(f"No output file (-o) or manual Fermi level (-f) provided. Using Fermi = 0.0 eV")
 
         # Generate output files
-        print("[INFO] Writing the basis... wait!")
+        print_info("Writing the basis... wait!")
         write_basis(ham, spin_suffix, spin_factor)
-        print(f"[OK] Wrote the basis: basis_set-{spin_suffix}.basis")
+        print_ok(f"Wrote the basis: basis_set-{spin_suffix}.basis")
         
-        print("[INFO] Writing the Hamiltonian... wait!")
+        print_info("Writing the Hamiltonian... wait!")
         # CORRECTION 3 is inside the write_hamiltonian function
         write_hamiltonian(ham, spin_suffix, fermi)
-        print(f"[OK] Wrote the Hamiltonian: tb-{spin_suffix}.ham")
+        print_ok(f"Wrote the Hamiltonian: tb-{spin_suffix}.ham")
         
     except Exception as e:
         print(color_text(f"\nCritical error: {str(e)}", 'red'), file=sys.stderr)
         sys.exit(1) # Exit with error code
 
     if show_banner:
-        print(color_text("\n[INFO] Successfully generated TB files.", 'green'))
+        print()
+        print_info("Successfully generated TB files.")
     
-    print("\n[INFO] Complete job!")
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     if show_banner:
         print(color_text("Saving Hamiltonians before they collapse their own wavefunctions.\n\n", 'bold'))

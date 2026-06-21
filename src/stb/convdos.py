@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok, print_warn
 
 import os
 import argparse
@@ -134,13 +134,15 @@ def main():
 
     kernel = gaussian_kernel_1d(args.size, args.sigma)
     inp_file = np.loadtxt(args.input_file)
-    print("\n[INFO] Read File") 
-    print("[INFO] Applied DOS convolution and plotting...") 
-    print("[WARNING] \n") 
+    print()
+    print_info("Read File")
+    print_info("Applied DOS convolution and plotting...") 
+    print_warn("\n")
     filtered_data = filter_data(inp_file, kernel)
     np.savetxt(args.outfile, filtered_data, fmt='%.6f', header="Energy DOS_filtered") 
-    print(f"\n[OK] Filtered data write in {args.outfile}")
-    print("[INFO] Complete job!") 
+    print()
+    print_ok(f"Filtered data write in {args.outfile}")
+    print_info("Complete job!") 
     print("\n"+"-"*60)
     print(color_text("We’ve convoluted everything… including the soul of the electron.\n\n", 'bold'))
 

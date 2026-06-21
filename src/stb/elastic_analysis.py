@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok, print_warn
 
 import os
 import sys
@@ -208,17 +208,17 @@ def main():
     print("-" * 60)
 
     # --- Setup ---
-    print(f"[INFO] Target Log File: {color_text(args.file, 'yellow')}")
+    print_info(f"Target Log File: {color_text(args.file, 'yellow')}")
     
     if args.is2d:
         unit_label = "N/m"
-        print(f"[INFO] Mode: {color_text('2D Material', 'cyan')} (Units: N/m)")
+        print_info(f"Mode: {color_text('2D Material', 'cyan')} (Units: N/m)")
     else:
         unit_label = "GPa"
-        print(f"[INFO] Mode: {color_text('3D Bulk', 'blue')} (Units: GPa)")
+        print_info(f"Mode: {color_text('3D Bulk', 'blue')} (Units: GPa)")
 
     # --- Data Mining ---
-    print(f"[INFO] Scanning for 'strain_*' folders...")
+    print_info("Scanning for 'strain_*' folders...")
     regex = re.compile(r"strain_([a-zA-Z0-9]+)_(m?)(\d+\.\d+)")
     folders = sorted([f for f in os.listdir('.') if os.path.isdir(f) and f.startswith("strain_")])
     data = {}
@@ -237,7 +237,7 @@ def main():
                 break
     
     if args.is2d and found_lz:
-        print(f"[INFO] Normalization by Cell Height (Lz): {Lz:.2f} Ang")
+        print_info(f"Normalization by Cell Height (Lz): {Lz:.2f} Ang")
     
     CONV_FACTOR = Lz * CONV_EVA2_TO_NM if args.is2d else CONV_EVA3_TO_GPA
 
@@ -270,7 +270,8 @@ def main():
         print(msg)
         # ---------------------------------------------
             
-    print(f"\n[OK] Loaded {loaded_count} calculations from {len(folders)} folders.")
+    print()
+    print_ok(f"Loaded {loaded_count} calculations from {len(folders)} folders.")
 
     if not data:
         print(f"{color_text('[FAIL]', 'red')} No valid data found in strain folders.")
@@ -349,7 +350,7 @@ def main():
     else:
         # 3D REPORT
         if abs(C_sym[2,2]) < 0.1 * abs(C_sym[0,0]) and abs(C_sym[0,0]) > 10.0:
-            print_dual(f"\n{color_text('[WARNING] Material seems to be 2D (C33 << C11). Consider using --2d', 'yellow')}", f_out)
+            print_dual(color_text('[WARN]  Material seems to be 2D (C33 << C11). Consider using --2d', 'yellow'), f_out)
             
         print_dual(f"\n{color_text('[1] 3D STIFFNESS MATRIX (' + unit_label + ')', 'magenta')}", f_out)
         header = "      " + "".join([f"{f'j={j+1}':<9}" for j in range(6)])
@@ -379,5 +380,6 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(f"\n{color_text('[INFO] Operation cancelled by user.', 'red')}")
+        print()
+        print_info("Operation cancelled by user.")
         sys.exit(0)

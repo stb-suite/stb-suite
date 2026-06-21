@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"    
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok, print_warn, print_error
 
 import os
 import sys
@@ -258,11 +258,11 @@ def getatomsandvectors_cif(input_cif):
     try:
         structure = ase_read(input_cif)
     except NameError:
-        print(color_text("[ERROR] Function 'ase_read' not found.", 'red'))
+        print_error("Function 'ase_read' not found.")
         print(color_text("       Make sure 'from ase.io import read as ase_read' is at the top of the script.", 'yellow'))
         sys.exit(1)
     except Exception as e:
-        print(color_text(f"[ERROR] Failed to read CIF file with ASE: {e}", 'red'))
+        print_error(f"Failed to read CIF file with ASE: {e}")
         print(color_text("       Make sure 'ase' is installed (pip install ase)", 'yellow'))
         sys.exit(1)
 
@@ -367,7 +367,7 @@ def getatomsandvectors_dftb(input_dftb):
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
 
 def getatomsandvectors_xsf(input_xsf):
-    print("[WARNING] Only for PRIMVEC format")
+    print_warn("Only for PRIMVEC format")
     element, atomicnumber = periodic_table()
     dataxsf = readfile(input_xsf)
     vectors = []
@@ -470,7 +470,7 @@ def getatomsandvectors_fdf(input_fdf):
     
     # Default to Direct (Fractional) if format not specified
     if typevectors is None:
-        print("[WARNING] AtomicCoordinatesFormat not found. Assuming 'Direct' (Fractional).")
+        print_warn("AtomicCoordinatesFormat not found. Assuming 'Direct' (Fractional).")
         typevectors = 'Direct'
 
     for pos in atomic_position_raw:
@@ -582,8 +582,8 @@ def writefilecif(typevectors, latticeparameter, vectors, getatoms, atomsposition
     """
     
     if coord_format and coord_format.lower() == 'cartesian':
-        print("[WARNING] CIF format requires fractional (Direct) coordinates.")
-        print("[INFO]    Ignoring '--coord-format cartesian' and converting to Direct.")
+        print_warn("CIF format requires fractional (Direct) coordinates.")
+        print_info("   Ignoring '--coord-format cartesian' and converting to Direct.")
     
     # Force conversion to Direct, regardless of user input
     final_type, final_positions = convert_coordinates(
@@ -635,8 +635,8 @@ def writefilecif(typevectors, latticeparameter, vectors, getatoms, atomsposition
 def writefilexyz(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
     if coord_format and coord_format.lower() == 'direct':
-        print("[WARNING] XYZ format requires Cartesian (Angstrom) coordinates.")
-        print("[INFO]    Ignoring '--coord-format direct' and converting to Cartesian.")
+        print_warn("XYZ format requires Cartesian (Angstrom) coordinates.")
+        print_info("   Ignoring '--coord-format direct' and converting to Cartesian.")
 
     # Force conversion to Cartesian
     final_type, final_positions = convert_coordinates(
@@ -701,8 +701,8 @@ def writefiledftb(typevectors, latticeparameter, vectors, getatoms, atomspositio
 def writefilexsf(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
     if coord_format and coord_format.lower() == 'direct':
-        print("[WARNING] XSF format (PRIMCOORD) requires Cartesian (Angstrom) coordinates.")
-        print("[INFO]    Ignoring '--coord-format direct' and converting to Cartesian.")
+        print_warn("XSF format (PRIMCOORD) requires Cartesian (Angstrom) coordinates.")
+        print_info("   Ignoring '--coord-format direct' and converting to Cartesian.")
 
     # Force conversion to Cartesian
     final_type, final_positions = convert_coordinates(
@@ -811,7 +811,7 @@ def convert_coordinates(typevectors_in: str,
     
     if type_in_norm == 'Direct' and type_out_norm == 'Cartesian':
         # --- Convert from Direct -> Cartesian ---
-        print("[INFO] Converting coordinates from Direct -> Cartesian...")
+        print_info("Converting coordinates from Direct -> Cartesian...")
         for symbol, positions in atomsposition_in.items():
             atomsposition_out[symbol] = []
             for pos in positions:
@@ -826,7 +826,7 @@ def convert_coordinates(typevectors_in: str,
 
     elif type_in_norm == 'Cartesian' and type_out_norm == 'Direct':
         # --- Convert from Cartesian -> Direct ---
-        print("[INFO] Converting coordinates from Cartesian -> Direct...")
+        print_info("Converting coordinates from Cartesian -> Direct...")
         # v_direct = M_inv . v_cart
         inv_lattice = np.linalg.inv(lattice_matrix)
         for symbol, positions in atomsposition_in.items():
@@ -889,14 +889,15 @@ def main():
         parser.error(
             "The --lattice argument is required when input format is XYZ.")
 
-    print(f"\n[INFO] Converting {args.in_file} ({args.in_format}) to {args.out_file} ({args.out_format})...")
+    print()
+    print_info(f"Converting {args.in_file} ({args.in_format}) to {args.out_file} ({args.out_format})...")
 
   
     if args.coord_format:
-        print(f"[INFO] Requested output coordinate format: {args.coord_format}")
+        print_info(f"Requested output coordinate format: {args.coord_format}")
 
     if args.out_format == "xyz":
-        print(f"[INFO] Lattice vector file: {args.lattice}")
+        print_info(f"Lattice vector file: {args.lattice}")
 
     # Adicionado o 'case' para o novo formato 'fdf'
     match (args.in_format):
@@ -926,7 +927,7 @@ def main():
                 args.in_file)
         
 
-    print(f"[OK] Read the file {args.in_file} ({args.in_format})")
+    print_ok(f"Read the file {args.in_file} ({args.in_format})")
 
     # All write functions now receive 'args.coord_format'
     match (args.out_format):
@@ -953,9 +954,9 @@ def main():
             writefilecif(typevectors, latticeparameter, vectors,
                          getatoms, atomsposition, args.out_file, args.coord_format)
 
-    print(f"[OK] Writing the file {args.out_file} ({args.out_format})")
+    print_ok(f"Writing the file {args.out_file} ({args.out_format})")
     
-    print("[INFO] Complete job!") 
+    print_info("Complete job!") 
     print("\n"+"-"*60)
     print(color_text("Converting input files is 10% coding, 90% crying.\n\n", 'bold'))
 

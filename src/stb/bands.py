@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_warn
 
 import os
 import argparse
@@ -136,7 +136,7 @@ def cbm_vbm(fermi_energy,high_sym,dic_bands):
     if len(above_fermi) > 0:
         cbm = min(cbm, np.nanmin(above_fermi))
     band_gap = cbm - vbm if cbm > vbm else 0.0  # Avoid negative values
-    print(f"[INFO] Fermi: {fermi_energy} \n[INFO] VBM: {vbm:.6f} \n[INFO] CBM: {cbm:.6f}\n[INFO] Band Gap in lines: {band_gap:.6f}")
+    print_info(f"Fermi: {fermi_energy} \n[INFO] VBM: {vbm:.6f} \n[INFO] CBM: {cbm:.6f}\n[INFO] Band Gap in lines: {band_gap:.6f}")
     return vbm,cbm
 
 def shift_bands(dic, val):
@@ -206,9 +206,10 @@ def main():
     print("-"*60)
 
     # Condition to shift the band structure
-    print("\n[INFO] Read file ...")
+    print()
+    print_info("Read file ...")
     fermi_energy,high_sym,dic_bands=read_data(args.input_file)
-    print("[INFO] Calculate VBM and CBM ...")
+    print_info("Calculate VBM and CBM ...")
     vbm,cbm=cbm_vbm(fermi_energy,high_sym,dic_bands)
 
     if args.shift == "vbm":
@@ -219,14 +220,15 @@ def main():
         rshift = fermi_energy
     elif args.shift == "manual":
         rshift = args.manual_value
-    print("[INFO] Write files...")
-    print("[WARNING] \n")
+    print_info("Write files...")
+    print_warn("\n")
     
     write_gnuplot_bands(shift_bands(dic_bands,rshift))
     plot(shift_bands(dic_bands,rshift),high_sym)
     plot_gnuplot(high_sym)
     
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     print(color_text("Bands found! But still no sign of Metallica.\n\n", 'bold'))
 

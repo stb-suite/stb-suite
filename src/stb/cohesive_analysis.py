@@ -15,7 +15,7 @@ except Exception:
 import os
 import sys
 import argparse
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_warn, print_error
 
 def get_atom_counts(fdf_path):
     """Parses structure.fdf to count the number of atoms for each chemical species"""
@@ -61,7 +61,7 @@ def get_atom_counts(fdf_path):
                             
         return counts
     except FileNotFoundError:
-        print(color_text(f"[ERROR] Structure file '{fdf_path}' not found.", 'red'))
+        print_error(f"Structure file '{fdf_path}' not found.")
         sys.exit(1)
 
 def extract_final_energy(folder_path, out_filename):
@@ -118,36 +118,38 @@ def main():
     struct_dir = os.path.join(root_dir, "structure")
     atoms_dir = os.path.join(root_dir, "atoms")
     
-    print("\n[INFO] Checking directories ...")
+    print()
+    print_info("Checking directories ...")
     if not os.path.exists(struct_dir) or not os.path.exists(atoms_dir):
-        print(color_text(f"[ERROR] Required directories 'structure' and/or 'atoms' not found in '{root_dir}'.", 'red'))
+        print_error(f"Required directories 'structure' and/or 'atoms' not found in '{root_dir}'.")
         sys.exit(1)
 
     # 1. Parse Structure for Atom Counts
     struct_fdf = os.path.join(struct_dir, "structure.fdf")
-    print("[INFO] Read structure file ...")
+    print_info("Read structure file ...")
     atom_counts = get_atom_counts(struct_fdf)
     
     if not atom_counts:
-        print(color_text("[ERROR] Could not extract atom counts. Check your structure.fdf", 'red'))
+        print_error("Could not extract atom counts. Check your structure.fdf")
         sys.exit(1)
 
     total_atoms = sum(atom_counts.values())
-    print(f"[INFO] Total atoms in cell: {total_atoms}")
+    print_info(f"Total atoms in cell: {total_atoms}")
     for sym, count in atom_counts.items():
         print(f"       -> {sym}: {count} atoms")
 
     # 2. Extract Energies
-    print("\n[INFO] Extracting energies ...")
+    print()
+    print_info("Extracting energies ...")
     errors = False
     
     # Bulk Energy
     e_bulk = extract_final_energy(struct_dir, args.out_file)
     if e_bulk is None:
-        print(color_text(f"[WARNING] Could not find '{args.out_file}' or finished calculation for the full structure.", 'yellow'))
+        print_warn(f"Could not find '{args.out_file}' or finished calculation for the full structure.")
         errors = True
     else:
-        print(f"[INFO] Energy (Full Structure): {e_bulk:12.6f} eV")
+        print_info(f"Energy (Full Structure): {e_bulk:12.6f} eV")
 
     # Isolated Atoms Energy
     isolated_energies = {}
@@ -158,32 +160,36 @@ def main():
         e_atom = extract_final_energy(sym_dir, args.out_file)
         
         if e_atom is None:
-            print(color_text(f"[WARNING] Could not find '{args.out_file}' or results for isolated atom: {sym}", 'yellow'))
+            print_warn(f"Could not find '{args.out_file}' or results for isolated atom: {sym}")
             errors = True
         else:
             isolated_energies[sym] = e_atom
             sum_isolated_energy += (e_atom * count)
-            print(f"[INFO] Energy (Isolated {sym}):   {e_atom:12.6f} eV")
+            print_info(f"Energy (Isolated {sym}):   {e_atom:12.6f} eV")
 
     # 3. Calculate Cohesive Energy
     if errors:
-        print(color_text("\n[ERROR] Cannot calculate cohesive energy because some calculations are missing or incomplete.", 'red'))
+        print()
+        print_error("Cannot calculate cohesive energy because some calculations are missing or incomplete.")
         sys.exit(1)
 
 	# Cohesive Energy Formula: E_coh = (E_bulk - Sum(E_iso)) / N_atoms
 	# Negative value means a bound, stable structure.
-    print("\n[INFO] Calculating Cohesive Energy ...")
+    print()
+    print_info("Calculating Cohesive Energy ...")
     e_coh_total =  e_bulk - sum_isolated_energy
     e_coh_per_atom = e_coh_total / total_atoms
 
-    print("\n[INFO] FINAL RESULTS:")
+    print()
+    print_info("FINAL RESULTS:")
     print(f"       Sum of Isolated Atoms: {sum_isolated_energy:12.6f} eV")
     print(f"       Bulk Structure Energy: {e_bulk:12.6f} eV")
     print(f"       Total Cohesive Energy:     {e_coh_total:10.4f} eV")
     print(f"       Cohesive Energy per Atom:  {e_coh_per_atom:10.4f} eV/atom")
 
     # 4. Save results to a .dat file
-    print("\n[INFO] Write files ...")
+    print()
+    print_info("Write files ...")
     out_file_path = os.path.join(root_dir, "cohesive_results.dat")
     try:
         with open(out_file_path, 'w') as f_out:
@@ -206,11 +212,12 @@ def main():
             f_out.write(f"Cohesive Energy per Atom:    {e_coh_per_atom:12.4f} eV/atom\n")
             f_out.write("\n==================================================\n")
             
-        print(f"[INFO] Results saved to: {out_file_path}")
+        print_info(f"Results saved to: {out_file_path}")
     except Exception as e:
-        print(color_text(f"[ERROR] Failed to save results to file: {e}", 'red'))
+        print_error(f"Failed to save results to file: {e}")
 
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     print(color_text("Cohesive energy analysis complete!\n\n", 'bold'))
 

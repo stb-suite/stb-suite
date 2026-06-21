@@ -19,7 +19,7 @@ import math
 import shutil
 import argparse
 import numpy as np
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_warn, print_error
 
 # Base Template
 CALC_TEMPLATE = """
@@ -113,22 +113,22 @@ def parse_structure_fdf(filename):
                         species_dict[parts[2]] = {'id': parts[0], 'Z': parts[1]}
         
         if len(all_values) != 9:
-            print(color_text(f"[ERROR] Expected 9 values in LatticeVectors block, found {len(all_values)}.", 'red'))
+            print_error(f"Expected 9 values in LatticeVectors block, found {len(all_values)}.")
             sys.exit(1)
             
         lattice = np.array(all_values).reshape(3, 3) * lattice_constant
         
         if not species_dict:
-            print(color_text("[ERROR] No chemical species found in ChemicalSpeciesLabel block.", 'red'))
+            print_error("No chemical species found in ChemicalSpeciesLabel block.")
             sys.exit(1)
 
         return lattice, species_dict
 
     except FileNotFoundError:
-        print(color_text(f"[ERROR] Structure file '{filename}' not found.", 'red'))
+        print_error(f"Structure file '{filename}' not found.")
         sys.exit(1)
     except Exception as e:
-        print(color_text(f"[ERROR] {e}", 'red'))
+        print_error(f"{e}")
         sys.exit(1)
 
 def compute_monkhorts(cella, cellb, cellc, k_density):
@@ -136,7 +136,7 @@ def compute_monkhorts(cella, cellb, cellc, k_density):
     volume = np.dot(cella, np.cross(cellb, cellc))
     
     if abs(volume) < 1e-9:
-        print(color_text("[ERROR] Cell volume is zero. Check lattice vectors.", 'red'))
+        print_error("Cell volume is zero. Check lattice vectors.")
         sys.exit(1)
         
     b1 = 2 * np.pi * np.cross(cellb, cellc) / volume
@@ -189,7 +189,7 @@ def link_pseudo(pp_path, symbol, target_dir):
         except FileExistsError:
             pass
     else:
-        print(f"[WARNING] Pseudopotential '{psml_file}' not found in {pp_path}")
+        print_warn(f"Pseudopotential '{psml_file}' not found in {pp_path}")
     return
 
 def main():
@@ -227,17 +227,19 @@ def main():
     print("-"*60)
     
     # Extract structure data
-    print("\n[INFO] Read structure file ...")
+    print()
+    print_info("Read structure file ...")
     lattice, species = parse_structure_fdf(args.structure)
-    print(f"[INFO] Detected species: {', '.join(species.keys())}")
+    print_info(f"Detected species: {', '.join(species.keys())}")
     
     # Calculate K-grid for the full structure
-    print("[INFO] Calculate Monkhorst-Pack grid ...")
+    print_info("Calculate Monkhorst-Pack grid ...")
     kgrid_divs = compute_monkhorts(lattice[0], lattice[1], lattice[2], args.k_density)
-    print(f"[INFO] Calculated K-grid for full structure: {kgrid_divs[0]} {kgrid_divs[1]} {kgrid_divs[2]} (density = {args.k_density})")
+    print_info(f"Calculated K-grid for full structure: {kgrid_divs[0]} {kgrid_divs[1]} {kgrid_divs[2]} (density = {args.k_density})")
 
     # 1. Setup full structure directory directly in current folder
-    print("\n[INFO] Setting up full structure directory ...")
+    print()
+    print_info("Setting up full structure directory ...")
     struct_dir = "structure"
     os.makedirs(struct_dir, exist_ok=True)
     
@@ -246,9 +248,9 @@ def main():
     struct_calc = CALC_TEMPLATE
     if args.spin:
         struct_calc = struct_calc.replace("Spin                non-polarized", "Spin                polarized")
-        print("[INFO] Spin polarization ENABLED for the full structure.")
+        print_info("Spin polarization ENABLED for the full structure.")
     else:
-        print("[INFO] Spin polarization DISABLED for the full structure.")
+        print_info("Spin polarization DISABLED for the full structure.")
     
     # Apply calculated K-grid
     kgrid_str = f"kgrid.MonkhorstPack   [{kgrid_divs[0]}  {kgrid_divs[1]}  {kgrid_divs[2]}]"
@@ -261,12 +263,13 @@ def main():
         link_pseudo(args.pp_path, sym, struct_dir)
 
     # 2. Setup isolated atoms directories directly in current folder
-    print("\n[INFO] Setting up isolated atoms directories ...")
+    print()
+    print_info("Setting up isolated atoms directories ...")
     atoms_root = "atoms"
     os.makedirs(atoms_root, exist_ok=True)
     
     for sym, data in species.items():
-        print(f"[INFO] Setting up isolated {sym} ...")
+        print_info(f"Setting up isolated {sym} ...")
         atom_dir = os.path.join(atoms_root, sym)
         os.makedirs(atom_dir, exist_ok=True)
         
@@ -282,7 +285,8 @@ def main():
             
         link_pseudo(args.pp_path, sym, atom_dir)
 
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     print(color_text("Setup complete! Folders 'structure' and 'atoms' are ready.\n\n", 'bold'))
 

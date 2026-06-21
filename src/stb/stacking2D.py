@@ -17,7 +17,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_warn, print_error
 
 import os
 import sys
@@ -69,7 +69,7 @@ def parse_fdf_to_pymatgen(filepath):
         return Structure(lattice, atomic_species, coords, coords_are_cartesian=False)
 
     except Exception as e:
-        print(color_text(f"[ERROR] Error parsing {filepath}: {e}", 'red'))
+        print_error(f"Error parsing {filepath}: {e}")
         sys.exit(1)
 
 def stack_heterostructure(layer1, layer2, gaps, target_vacuum, max_area, max_strain, shift_x=0.0, shift_y=0.0, twist_angle=0.0, strain_mode='top', match_id=0, interactive=False, batch_sym=False):
@@ -77,16 +77,17 @@ def stack_heterostructure(layer1, layer2, gaps, target_vacuum, max_area, max_str
     
     # 1. APPLY MATHEMATICALLY EXACT ROTATION
     if twist_angle != 0.0:
-        print(color_text(f"[INFO] Applying initial twist angle of {twist_angle}° to Layer 2...", 'cyan'))
+        print_info(f"Applying initial twist angle of {twist_angle}° to Layer 2...")
         op = SymmOp.from_axis_angle_and_translation([0, 0, 1], twist_angle)
         layer2.apply_operation(op, fractional=False)
 
-    print(color_text("[INFO] Searching for commensurate supercells (ZSL Algorithm)...", 'cyan'))
+    print_info("Searching for commensurate supercells (ZSL Algorithm)...")
     zsl = ZSLGenerator(max_area=max_area, max_length_tol=max_strain, max_angle_tol=0.1) 
     
     raw_matches = list(zsl(layer1.lattice.matrix[:2], layer2.lattice.matrix[:2]))
     if not raw_matches:
-        print(color_text(f"\n[ERROR] No lattice match found! Try increasing --max_area or --max_strain.", 'red'))
+        print()
+        print_error(f"No lattice match found! Try increasing --max_area or --max_strain.")
         sys.exit(1)
 
     evaluated_matches = []
@@ -146,7 +147,7 @@ def stack_heterostructure(layer1, layer2, gaps, target_vacuum, max_area, max_str
                 pass
     else:
         if match_id >= len(evaluated_matches) or match_id < 0:
-            print(color_text(f"[ERROR] Selected match_id {match_id} is out of range.", 'red'))
+            print_error(f"Selected match_id {match_id} is out of range.")
             sys.exit(1)
         
     best_match_data = evaluated_matches[match_id]
@@ -155,32 +156,33 @@ def stack_heterostructure(layer1, layer2, gaps, target_vacuum, max_area, max_str
     t_mat1 = np.eye(3); t_mat1[:2, :2] = best_match.film_transformation
     t_mat2 = np.eye(3); t_mat2[:2, :2] = best_match.substrate_transformation
     
-    print(color_text(f"\n[INFO] Selected Match ID {match_id} | Area: {best_match_data['area']:.2f} Å² | Angular Strain: {best_match_data['angle_strain']:.2f}°", 'green'))
+    print()
+    print_info(f"Selected Match ID {match_id} | Area: {best_match_data['area']:.2f} Å² | Angular Strain: {best_match_data['angle_strain']:.2f}°")
     if twist_angle != 0.0 and best_match_data['angle_strain'] > 1.0:
-        print(color_text(f"[WARNING] High Angular Strain! This match will 'un-rotate' your structure by ~{best_match_data['angle_strain']:.1f}° to force PBC fit.", 'yellow'))
+        print_warn(f"High Angular Strain! This match will 'un-rotate' your structure by ~{best_match_data['angle_strain']:.1f}° to force PBC fit.")
         print(color_text(f"          Increase --max_area to find a true Moiré supercell with 0° Angular Strain.", 'yellow'))
 
     # Define Shifts
     shifts_to_run = {}
     if batch_sym:
-        print(color_text("[INFO] Batch Symmetry Mode active. Generating high-symmetry configurations...", 'cyan'))
+        print_info("Batch Symmetry Mode active. Generating high-symmetry configurations...")
         if shift_x != 0.0 or shift_y != 0.0:
-            print(color_text(f"  -> [WARNING] Custom shifts (-tx {shift_x}, -ty {shift_y}) are IGNORED in --batch_sym mode.", 'yellow'))
+            print_warn(f"  -> Custom shifts (-tx {shift_x}, -ty {shift_y}) are IGNORED in --batch_sym mode.")
         if twist_angle != 0.0:
-            print(color_text(f"  -> [WARNING] Using --batch_sym with a twist angle ({twist_angle}°). Shifting may not yield true AA/AB symmetries due to Moiré patterns.", 'yellow'))
+            print_warn(f"  -> Using --batch_sym with a twist angle ({twist_angle}°). Shifting may not yield true AA/AB symmetries due to Moiré patterns.")
 
         gamma = layer1.lattice.angles[2]
         is_hex = (abs(gamma - 120.0) < 2.0 or abs(gamma - 60.0) < 2.0) and abs(layer1.lattice.a - layer1.lattice.b) < 0.1
 
         shifts_to_run = {"AA": [0.0, 0.0], "Bridge_X": [0.5, 0.0], "Bridge_Y": [0.0, 0.5], "Center": [0.5, 0.5]}
         if is_hex:
-            print(color_text("  -> [INFO] Hexagonal lattice detected. Adding Hex_AB and Hex_BA stackings.", 'green'))
+            print_info("  -> Hexagonal lattice detected. Adding Hex_AB and Hex_BA stackings.")
             shifts_to_run.update({"Hex_AB": [1/3, 2/3], "Hex_BA": [2/3, 1/3]})
     else:
         shifts_to_run = {"Custom": [shift_x, shift_y]}
 
     results = {}
-    print(color_text("[INFO] Building heterostructures...", 'cyan'))
+    print_info("Building heterostructures...")
     for name, shift in shifts_to_run.items():
         for gap in gaps:
             layer1_supercell = layer1.copy(); layer1_supercell.make_supercell(t_mat1)
@@ -303,7 +305,7 @@ def analyze_and_report_symmetry(layer1, layer2, hetero, filename="symmetry_repor
             print(table_lines[6])
             
         print(color_text(separator, 'blue'))
-        print(color_text(f"[INFO] Symmetry report saved to: {filename}", 'green'))
+        print_info(f"Symmetry report saved to: {filename}")
     
     # Save to text file
     with open(filename, 'w') as f: 
@@ -341,7 +343,7 @@ def export_to_fdf(structure, filename="stacked_structure.fdf"):
             f.write(f"  {site.frac_coords[0]:.8f}   {site.frac_coords[1]:.8f}   {site.frac_coords[2]:.8f}   {specie_id}\n")
         f.write("%endblock AtomicCoordinatesAndAtomicSpecies\n")
 
-    print(color_text(f"[INFO] Structure exported to: {filename}", 'green'))
+    print_info(f"Structure exported to: {filename}")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -389,13 +391,13 @@ def main():
     print("\n" + color_text("STACKING PROCESS:", 'bold'))
     print("-" * 60)
 
-    print(color_text("[INFO] Parsing FDF files...", 'cyan'))
+    print_info("Parsing FDF files...")
     layer1 = parse_fdf_to_pymatgen(args.layer1)
     layer2 = parse_fdf_to_pymatgen(args.layer2)
 
     if args.gap_range:
         gaps = np.linspace(args.gap_range[0], args.gap_range[1], int(args.gap_range[2]))
-        print(color_text(f"[INFO] Energy Curve Mode detected. Generating {len(gaps)} distance points.", 'cyan'))
+        print_info(f"Energy Curve Mode detected. Generating {len(gaps)} distance points.")
     else:
         gaps = [args.gap]
 
@@ -444,7 +446,8 @@ def main():
         print_to_stdout = not is_multi_output
         analyze_and_report_symmetry(layer1, layer2, hetero, filename=sym_filename, symprec=args.symprec, print_stdout=print_to_stdout)
 
-    print("\n" + color_text("[INFO] Complete job!", 'green')) 
+    print()
+    print_info("Complete job!") 
     print("-" * 60)
     print(color_text("Stacking successful! Let's hope your supercell doesn't break the cluster.\n", 'bold'))
 

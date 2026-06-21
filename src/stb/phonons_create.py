@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_error
 
 import os
 import sys
@@ -80,39 +80,41 @@ def main():
     print("-"*60)
 
     # 1. Validate input files
-    print("\n[INFO] Validating input files ...")
+    print()
+    print_info("Validating input files ...")
     if not os.path.exists(args.structure):
-        print(color_text(f"[ERROR] Structure file '{args.structure}' not found in the current directory.", 'red'))
+        print_error(f"Structure file '{args.structure}' not found in the current directory.")
         sys.exit(1)
     if not os.path.exists(args.calc):
-        print(color_text(f"[ERROR] Calculation file '{args.calc}' not found in the current directory.", 'red'))
+        print_error(f"Calculation file '{args.calc}' not found in the current directory.")
         sys.exit(1)
 
     # 2. Read structure
-    print(f"[INFO] Reading unit cell from '{args.structure}' ...")
+    print_info(f"Reading unit cell from '{args.structure}' ...")
     try:
         unitcell = read_siesta(args.structure)
     except Exception as e:
-        print(color_text(f"[ERROR] Failed to read {args.structure}. Make sure it's properly formatted.\nDetails: {e}", 'red'))
+        print_error(f"Failed to read {args.structure}. Make sure it's properly formatted.\nDetails: {e}")
         sys.exit(1)
 
     # 3. Extract and validate pseudopotentials
     symbols = unitcell.symbols
     unique_elements = list(set(symbols))
-    print(f"[INFO] Elements found in unit cell: {', '.join(unique_elements)}")
+    print_info(f"Elements found in unit cell: {', '.join(unique_elements)}")
     
-    print(f"[INFO] Searching for pseudopotentials in '{args.pseudo_dir}' ...")
+    print_info(f"Searching for pseudopotentials in '{args.pseudo_dir}' ...")
     pseudos_to_copy, missing = get_required_pseudos(unique_elements, args.pseudo_dir)
 
     if missing:
-        print(color_text(f"\n[CRITICAL ERROR] Missing pseudopotentials for the following elements: {', '.join(missing)}", 'red'))
+        print()
+        print_error(f"Missing pseudopotentials for the following elements: {', '.join(missing)}")
         print(color_text(f"Action required: Please add the necessary '{missing[0]}.psf' or '{missing[0]}.psml' files into the '{args.pseudo_dir}' directory and rerun the script.", 'yellow'))
         sys.exit(1)
         
-    print(f"[INFO] Found all required pseudopotentials: {', '.join([os.path.basename(p) for p in pseudos_to_copy])}")
+    print_info(f"Found all required pseudopotentials: {', '.join([os.path.basename(p) for p in pseudos_to_copy])}")
 
     # 4. Initialize Phonopy
-    print(f"[INFO] Generating supercell {args.dim} with {args.distance} Å displacements ...")
+    print_info(f"Generating supercell {args.dim} with {args.distance} Å displacements ...")
     supercell_matrix = [
         [args.dim[0], 0, 0], 
         [0, args.dim[1], 0], 
@@ -127,7 +129,7 @@ def main():
     output_root = "phonon_runs"
     os.makedirs(output_root, exist_ok=True)
     
-    print(f"[INFO] Building {len(supercells)} displacement folders in '{output_root}' ...")
+    print_info(f"Building {len(supercells)} displacement folders in '{output_root}' ...")
 
     for i, scell in enumerate(supercells):
         if scell is None:
@@ -151,9 +153,10 @@ def main():
     # 6. Save Phonopy metadata
     yaml_path = os.path.join(output_root, "phonopy_disp.yaml")
     phonon.save(yaml_path)
-    print(f"[INFO] Saved Phonopy metadata to '{yaml_path}'")
+    print_info(f"Saved Phonopy metadata to '{yaml_path}'")
     
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     print(color_text("Phonon folders ready! Let the atoms shake, rattle and roll.\n\n", 'bold'))
 

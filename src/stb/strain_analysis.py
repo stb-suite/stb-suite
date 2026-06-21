@@ -12,7 +12,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_error
 
 import os
 import sys
@@ -169,7 +169,7 @@ def main():
     
     folders = [d for d in os.listdir('.') if os.path.isdir(d) and d.startswith('strain_')]
     if not folders:
-        print(color_text("[ERROR] No 'strain_*' folders found.", 'red')); sys.exit(1)
+        print_error("No 'strain_*' folders found."); sys.exit(1)
         
     data = []
     detected_dir = "xx"
@@ -178,7 +178,7 @@ def main():
     if args.is2d and os.path.exists(os.path.join(folders[0], args.file)):
         z_auto = get_lattice_z_vector(os.path.join(folders[0], args.file))
         if z_auto > 1.0:
-            print(f"{color_text('[INFO]', 'cyan')} Detected Cell Z-Height: {z_auto:.2f} Ang (used for N/m conversion)")
+            print_info(f"Detected Cell Z-Height: {z_auto:.2f} Ang (used for N/m conversion)")
             args.thickness = z_auto
 
     print(f"   Found {len(folders)} strain steps.")
@@ -196,7 +196,7 @@ def main():
                 print(f"   Reading {f}: Strain {val:>5.2f}% OK")
     
     if not data:
-        print(color_text("[ERROR] No stress data found.", 'red')); sys.exit(1)
+        print_error("No stress data found."); sys.exit(1)
         
     # Sort and Convert
     data = np.array(sorted(data, key=lambda x: x[0]))

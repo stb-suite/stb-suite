@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok, print_error
 
 import os
 import sys
@@ -21,7 +21,8 @@ import argparse
 try:
     import phonopy
 except ImportError:
-    print("\n[ERROR] Phonopy is not installed. Please install it using: pip install phonopy")
+    print()
+    print_error("Phonopy is not installed. Please install it using: pip install phonopy")
     sys.exit(1)
 
 def main():
@@ -57,47 +58,49 @@ def main():
     system_label = args.label
 
     # 1. Validate directory
-    print(f"\n[INFO] Validating phonon directory '{phonon_dir}' ...")
+    print()
+    print_info(f"Validating phonon directory '{phonon_dir}' ...")
     if not os.path.exists(phonon_dir):
-        print(color_text(f"[ERROR] Directory '{phonon_dir}' not found.", 'red'))
+        print_error(f"Directory '{phonon_dir}' not found.")
         sys.exit(1)
 
     yaml_file = os.path.join(phonon_dir, "phonopy_disp.yaml")
     if not os.path.exists(yaml_file):
-        print(color_text(f"[ERROR] '{yaml_file}' not found. Did you run the displacement generator?", 'red'))
+        print_error(f"'{yaml_file}' not found. Did you run the displacement generator?")
         sys.exit(1)
 
     # 2. Extract forces (build FORCE_SETS)
-    print(f"[INFO] Extracting forces from .FA files with label '{system_label}' ...")
+    print_info(f"Extracting forces from .FA files with label '{system_label}' ...")
     fa_files_abs = sorted(glob.glob(os.path.join(phonon_dir, "disp-*", f"{system_label}.FA")))
     
     if not fa_files_abs:
-        print(color_text(f"[ERROR] No {system_label}.FA files found in {phonon_dir}/disp-*", 'red'))
+        print_error(f"No {system_label}.FA files found in {phonon_dir}/disp-*")
         print(color_text("Make sure SIESTA calculations finished successfully.", 'yellow'))
         sys.exit(1)
 
     fa_files_rel = [os.path.relpath(f, phonon_dir) for f in fa_files_abs]
-    print(f"[INFO] Found {len(fa_files_rel)} force files. Generating FORCE_SETS...")
+    print_info(f"Found {len(fa_files_rel)} force files. Generating FORCE_SETS...")
     
     cmd = ["phonopy", "--siesta", "-f"] + fa_files_rel
     
     try:
         subprocess.check_call(cmd, cwd=phonon_dir, stdout=subprocess.DEVNULL)
-        print(color_text("[SUCCESS] FORCE_SETS generated successfully.", 'green'))
+        print_ok("FORCE_SETS generated successfully.")
     except subprocess.CalledProcessError as e:
-        print(color_text(f"[ERROR] Failed to generate FORCE_SETS. Phonopy error: {e}", 'red'))
+        print_error(f"Failed to generate FORCE_SETS. Phonopy error: {e}")
         sys.exit(1)
 
     # 3. Thermal properties via Phonopy Python API
-    print(f"\n[INFO] Initializing Phonopy API and loading FORCE_SETS ...")
+    print()
+    print_info(f"Initializing Phonopy API and loading FORCE_SETS ...")
     try:
         os.chdir(phonon_dir)
         phonon = phonopy.load("phonopy_disp.yaml")
     except Exception as e:
-        print(color_text(f"[ERROR] Could not load phonopy data: {e}", 'red'))
+        print_error(f"Could not load phonopy data: {e}")
         sys.exit(1)
 
-    print(f"[INFO] Running thermal properties calculation ...")
+    print_info(f"Running thermal properties calculation ...")
     print(f"       -> Q-Mesh: {args.mesh}")
     print(f"       -> Temperature Range: {args.tmin} K to {args.tmax} K (step: {args.tstep} K)")
 
@@ -105,7 +108,7 @@ def main():
     phonon.run_thermal_properties(t_min=args.tmin, t_max=args.tmax, t_step=args.tstep)
 
     # 4. Save plots and data
-    print("[INFO] Exporting results ...")
+    print_info("Exporting results ...")
     
     tp_plot = phonon.plot_thermal_properties()
     plot_filename = "thermal_properties.png"

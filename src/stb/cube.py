@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import COLORS, color_text, show_intro, print_info, print_ok, print_warn, print_error
 
 import os
 import sys
@@ -22,7 +22,8 @@ import numpy as np
 try:
     import sisl
 except ImportError:
-    print("\n" + color_text("[CRITICAL ERROR] sisl library not found.", 'red'))
+    print()
+    print_error("sisl library not found.")
     print("Please install it using: pip install sisl")
     sys.exit(1)
 
@@ -76,11 +77,12 @@ def main():
 
     # --- 1. Check Input ---
     if not os.path.exists(input_file):
-        print(f"{COLORS['red']}[ERROR] Input file '{input_file}' not found.{COLORS['reset']}")
+        print_error(f"Input file '{input_file}' not found.")
         sys.exit(1)
 
     # --- 2. Load Grid ---
-    print(f"\n[INFO] Reading SIESTA file: {color_text(input_file, 'cyan')}...")
+    print()
+    print_info(f"Reading SIESTA file: {color_text(input_file, 'cyan')}...")
     try:
         sile = sisl.get_sile(input_file)
         grid = sile.read_grid()
@@ -90,17 +92,17 @@ def main():
 
     # --- 3. Load Geometry (Optional) ---
     if os.path.exists(xv_file):
-        print(f"[INFO] Found geometry file: {color_text(xv_file, 'cyan')}. Mapping atoms...")
+        print_info(f"Found geometry file: {color_text(xv_file, 'cyan')}. Mapping atoms...")
         try:
             geom = sisl.get_sile(xv_file).read_geometry()
             grid.geometry = geom
         except Exception as e:
-            print(f"{COLORS['yellow']}[WARNING] Failed to read geometry from .XV: {e}{COLORS['reset']}")
+            print_warn(f"Failed to read geometry from .XV: {e}")
     else:
-        print(f"{COLORS['yellow']}[WARNING] No .XV file found. Atoms will be missing in the .cube output.{COLORS['reset']}")
+        print_warn(f"No .XV file found. Atoms will be missing in the .cube output.")
 
     # --- 4. Metadata Display ---
-    print(f"[INFO] Grid Metadata:")
+    print_info(f"Grid Metadata:")
     print(f"       Shape:   {grid.shape}")
     
     cell = get_cell_matrix(grid.lattice)
@@ -113,15 +115,16 @@ def main():
         print(f"       Integral: {total_val:.4f} e (Check if close to total electrons)")
 
     # --- 5. Write Output ---
-    print(f"[INFO] Converting to Cube format...")
+    print_info(f"Converting to Cube format...")
     try:
         grid.write(output_file)
-        print(f"[SUCCESS] File saved as: {color_text(output_file, 'green')}")
+        print_ok(f"File saved as: {color_text(output_file, 'green')}")
     except Exception as e:
-        print(f"{COLORS['red']}[ERROR] Failed to write output file: {e}{COLORS['reset']}")
+        print_error(f"Failed to write output file: {e}")
         sys.exit(1)
 
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     # Funny closing phrase
     print(color_text("Conversion complete. It's hip to be square (cube).\n\n", 'bold'))

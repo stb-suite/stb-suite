@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"  
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_warn
 
 import os
 import warnings
@@ -29,7 +29,7 @@ from pymatgen.io.ase import AseAtomsAdaptor
 def warn_handler(message, category, filename, lineno, file=None, line=None):
     log_message = f"{category.__name__}: {message} (File: {filename}, Line: {lineno})"
     logging.warning(log_message)
-    print("[WARNING] Warning detected! Check warnings.log for details.")
+    print_warn("Warning detected! Check warnings.log for details.")
 
 warnings.showwarning = warn_handler
 
@@ -40,7 +40,8 @@ def compute_ecn(structure, mode, atoms_position=None):
 
         # Lattice parameters
         lattice = structure.lattice
-        print("\n[INFO] Lattice parameters:")
+        print()
+        print_info("Lattice parameters:")
         print(f"   a = {lattice.a:.3f} Å")
         print(f"   b = {lattice.b:.3f} Å")
         print(f"   c = {lattice.c:.3f} Å")
@@ -48,7 +49,7 @@ def compute_ecn(structure, mode, atoms_position=None):
         print(f"   Beta = {lattice.beta:.2f}°")
         print(f"   Gamma = {lattice.gamma:.2f}°")
 
-        f.write("\n[INFO] Lattice parameters:\n")
+        f.write("\n-- Lattice parameters:\n")
         f.write(f"   a = {lattice.a:.3f} Å\n")
         f.write(f"   b = {lattice.b:.3f} Å\n")
         f.write(f"   c = {lattice.c:.3f} Å\n")
@@ -58,7 +59,8 @@ def compute_ecn(structure, mode, atoms_position=None):
 
         # Lattice vectors
         lattice_vectors = structure.lattice.matrix
-        print("\n[INFO] Writing Lattice vectors.")
+        print()
+        print_info("Writing Lattice vectors.")
         f.write("\nLattice vectors:\n")
         for i, vector in enumerate(lattice_vectors):
             f.write(f"   a_{i+1}: {vector[0]}   {vector[1]}   {vector[2]}\n")
@@ -85,7 +87,8 @@ def compute_ecn(structure, mode, atoms_position=None):
                         ecn_results[method_name].append(None)
 
             ecn_avg = {method: np.nanmean([v for v in values if v is not None]) for method, values in ecn_results.items()}
-            print("\n[INFO] Calculating the average ECN.")
+            print()
+            print_info("Calculating the average ECN.")
             f.write("\nAverage ECN:\n")
             for method, value in ecn_avg.items():
                 f.write(f"{method:15}: {value:.2f}\n")
@@ -98,7 +101,8 @@ def compute_ecn(structure, mode, atoms_position=None):
                     except:
                         ecn_results[method_name].append(None)
 
-            print("\n[INFO] Calculating the ECN for specified atoms.")
+            print()
+            print_info("Calculating the ECN for specified atoms.")
             f.write("\nECN for specified atoms:\n")
             for i, atom_index in enumerate(atoms_position):
                 f.write(f" Atom {pos_atomics[atom_index-1][0]}:\n")
@@ -108,8 +112,9 @@ def compute_ecn(structure, mode, atoms_position=None):
                     f.write(f"      {method:15}: {values[i]}\n")
 
         # Average bond distance calculation using CrystalNN
-        print("\n[INFO] Calculating average bond distance...")
-        f.write("\n[INFO] Average bond distance:\n")
+        print()
+        print_info("Calculating average bond distance...")
+        f.write("\n-- Average bond distance:\n")
 
         cnn = CrystalNN()
         distances = []
@@ -123,14 +128,14 @@ def compute_ecn(structure, mode, atoms_position=None):
                     dist = neighbor['site'].distance(structure[i])
                     distances.append(dist)
             except Exception as e:
-                print(f"[WARNING] Failed to compute distances for atom {i+1}: {e}")
+                print_warn(f"Failed to compute distances for atom {i+1}: {e}")
 
         if distances:
             avg_distance = np.mean(distances)
             print(f"   Average bond distance: {avg_distance:.4f} Å")
             f.write(f"   Average bond distance: {avg_distance:.4f} Å\n")
         else:
-            print("[WARNING] No distances could be computed.")
+            print_warn("No distances could be computed.")
             f.write("   No distances could be computed.\n")
 
         # Atomic positions
@@ -158,7 +163,8 @@ def main():
     if args.mode == "list" and not args.list:
         parser.error("--list is required when --mode is 'list'")
 
-    print("\n[INFO] Reading structure file...")
+    print()
+    print_info("Reading structure file...")
     atoms_position = list(map(int, args.list.strip('[]').split(','))) if args.list else None
 
     if args.format in ["poscar", "cif"]:
@@ -171,7 +177,8 @@ def main():
 
     compute_ecn(structure, args.mode, atoms_position)
 
-    print("\n[INFO] Job complete!")
+    print()
+    print_info("Job complete!")
     print("\n"+"-"*60)
 
 if __name__ == "__main__":

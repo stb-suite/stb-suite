@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"  
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info
 
 import os
 import argparse
@@ -60,16 +60,17 @@ def main():
                 print(f"[Dry-run] Would remove: {file}")
             elif args.no_confirm:
                 os.remove(full_path)
-                print(f"[INFO] Removed: {file}")
+                print_info(f"Removed: {file}")
             else:
                 answer = input(f"[CONFIRM] Delete {file}? [y/N] ").strip().lower()
                 if answer == 'y':
                     os.remove(full_path)
-                    print(f"[INFO] Removed: {file}")
+                    print_info(f"Removed: {file}")
                 else:
-                    print(f"[INFO] Skipped: {file}")
+                    print_info(f"Skipped: {file}")
     
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     print(color_text("Cleaned up! May the deleted files rest in pieces.\n\n", 'bold'))
 

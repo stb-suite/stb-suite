@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"  
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import COLORS, color_text, show_intro, print_info, print_ok, print_warn, print_error
 
 import os
 import sys
@@ -34,9 +34,9 @@ def get_zval_from_output(label, override_path=None):
     if override_path:
         target_file = override_path
         if not os.path.exists(target_file):
-            print(color_text(f"   [ERROR] Reference file '{target_file}' (via --ref) not found.", 'red'))
+            print_error(f"Reference file '{target_file}' (via --ref) not found.")
             return None
-        print(f"   [INFO] Using external reference file: {color_text(target_file, 'bold')}")
+        print_info(f"Using external reference file: {color_text(target_file, 'bold')}")
     else:
         target_file = f"{label}.out"
         if not os.path.exists(target_file):
@@ -97,7 +97,7 @@ def get_zval_from_output(label, override_path=None):
                         dynamic_valence[current_label] = zval
                         
     except Exception as e:
-        print(color_text(f"[WARN] Error reading {target_file}: {e}", 'yellow'))
+        print_warn(f"Error reading {target_file}: {e}")
         return None
         
     return dynamic_valence if dynamic_valence else None
@@ -115,10 +115,10 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
         output_file = f"{label}_BADER.txt"
 
     if not os.path.exists(file_rho):
-        print(color_text(f"[ERROR] Grid file '{file_rho}' not found.", 'red'))
+        print_error(f"Grid file '{file_rho}' not found.")
         return
 
-    print(f"[INFO] System: {color_text(label, 'bold')} | Mode: {color_text(speed_mode.upper(), 'cyan')}")
+    print_info(f"System: {color_text(label, 'bold')} | Mode: {color_text(speed_mode.upper(), 'cyan')}")
 
     # --- Z_val Setup ---
     print(f"0. [Setup] Configuring valence charges...")
@@ -126,14 +126,14 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
     detected_valence = get_zval_from_output(label, override_path=ref_file)
     
     if detected_valence:
-        print(f"   {color_text('[SUCCESS]', 'green')} Z_vals detected: {detected_valence}")
+        print_ok(f"Z_vals detected: {detected_valence}")
         valence_source = detected_valence
         source_name = f"Siesta Output ({ref_file if ref_file else label+'.out'})"
     else:
         # --- HIGH VISIBILITY WARNING BLOCK ---
         warn_msg = [
             "\n" + "!" * 65,
-            "[WARNING] .out FILE NOT FOUND OR UNREADABLE! USING DEFAULT VALUES.",
+            "Bader: .out FILE NOT FOUND OR UNREADABLE! USING DEFAULT VALUES.",
             "Please ensure your pseudopotential Z_val matches standard values.",
             "Use --ref to point to a valid .out file.",
             "!" * 65 + "\n"
@@ -154,7 +154,7 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
         elif os.path.exists(file_fdf):
             geometry = sisl.get_sile(file_fdf).read_geometry()
         else:
-            print(color_text("[ERROR] No geometry file (.XV or .fdf) found.", 'red'))
+            print_error("No geometry file (.XV or .fdf) found.")
             return
 
         rho_grid = sisl.get_sile(file_rho).read_grid()
@@ -162,7 +162,7 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
         rho_grid.write(file_cube)
         
     except Exception as e:
-        print(color_text(f"[ERROR] SISL processing failed: {e}", 'red'))
+        print_error(f"SISL processing failed: {e}")
         return
 
     # --- STEP 2: PyBader ---
@@ -177,7 +177,7 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
         bader_job()
         raw_populations = bader_job.atoms_charge
     except Exception as e:
-        print(color_text(f"[ERROR] PyBader calculation failed: {e}", 'red'))
+        print_error(f"PyBader calculation failed: {e}")
         return
 
     # --- STEP 3: Analysis ---
@@ -193,7 +193,7 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
         z_val = valence_source.get(sym, 0.0)
         
         if z_val == 0.0 and sym not in valence_source:
-             print(color_text(f"   [WARN] Element {sym} not found in Z_val dictionary!", 'red'))
+            print_warn(f"Element {sym} not found in Z_val dictionary!")
 
         total_theory += z_val
         atoms_data.append({'id': i+1, 'sym': sym, 'z_val': z_val, 'pop_raw': raw_populations[i]})
@@ -204,7 +204,7 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
     correction_factor = 1.0 / ratio if abs(ratio - 1.0) > 0.1 else 1.0
     
     if correction_factor != 1.0:
-        print(color_text(f"   [INFO] Unit mismatch corrected. Factor: {correction_factor:.4f}", 'cyan'))
+        print_info(f"Unit mismatch corrected. Factor: {correction_factor:.4f}")
 
     # --- STEP 4: Output ---
     out_lines = []
@@ -248,9 +248,10 @@ def solve_bader(label, output_file=None, speed_mode='normal', ref_file=None):
     try:
         with open(output_file, "w") as f:
             f.write("\n".join(out_lines))
-        print(f"\n{color_text('[OK]', 'green')} Results saved to: {color_text(output_file, 'bold')}")
+        print()
+        print_ok(f"Results saved to: {color_text(output_file, 'bold')}")
     except IOError:
-        print(color_text(f"[ERROR] Could not save file {output_file}", 'red'))
+        print_error(f"Could not save file {output_file}")
 
 # ================= EXECUTION =================
 

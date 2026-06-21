@@ -28,6 +28,19 @@ def color_text(text: str, color: str) -> str:
     return f"{COLORS[color]}{text}{COLORS['reset']}"
 
 
+def print_info(msg: str) -> None:
+    print(color_text(f"[INFO]  {msg}", 'cyan'))
+
+def print_ok(msg: str) -> None:
+    print(color_text(f"[OK]    {msg}", 'green'))
+
+def print_warn(msg: str) -> None:
+    print(color_text(f"[WARN]  {msg}", 'yellow'))
+
+def print_error(msg: str) -> None:
+    print(color_text(f"[ERROR] {msg}", 'red'))
+
+
 def show_intro() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 

@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"    
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok
 
 import numpy as np
 import math
@@ -130,7 +130,7 @@ def copy_pseudopotentials(species_list, pp_path):
         if os.path.exists(source_psml):
             try:
                 shutil.copy2(source_psml, dest_psml)
-                print(color_text(f"  [OK] Copied: {psml_filename}", 'green'))
+                print_ok(f"Copied: {psml_filename}")
                 copied_files += 1
             except Exception as e:
                 warnings.append(f"  [ERROR] Failed to copy {psml_filename}: {e}")
@@ -138,7 +138,7 @@ def copy_pseudopotentials(species_list, pp_path):
         elif os.path.exists(source_psf):
             try:
                 shutil.copy2(source_psf, dest_psf)
-                print(color_text(f"  [OK] Copied: {psf_filename}", 'green'))
+                print_ok(f"Copied: {psf_filename}")
                 copied_files += 1
             except Exception as e:
                 warnings.append(f"  [ERROR] Failed to copy {psf_filename}: {e}")
@@ -166,11 +166,11 @@ def generate_calculation(struct_file, chosen_mode, pp_path):
             return # Abort the function
 
         if not pp_path:
-            print(color_text("[INFO] PP path is blank. Skipping pseudopotential copy.", 'cyan'))
+            print_info("PP path is blank. Skipping pseudopotential copy.")
         else:
-            print(color_text(f"[INFO] PP path set to: {pp_path}", 'cyan'))
+            print_info(f"PP path set to: {pp_path}")
 
-        print(color_text(f"[INFO] Mode selected: {chosen_mode}", 'cyan'))
+        print_info(f"Mode selected: {chosen_mode}")
 
         # --- 2. Start Generation Logic ---
         print(f"\nProcessing '{struct_file}'...")
@@ -181,25 +181,25 @@ def generate_calculation(struct_file, chosen_mode, pp_path):
         template_string = ""
         if chosen_mode in ['relax', 'relax+d3']:
             template_string = CALC_RELAX_TEMPLATE
-            print(color_text("[INFO] Using 'Relax' template.", 'cyan'))
+            print_info("Using 'Relax' template.")
         elif chosen_mode in ['total_energy', 'total_energy+d3']:
             template_string = CALC_TOTAL_ENERGY_TEMPLATE
-            print(color_text("[INFO] Using 'Total Energy' template.", 'cyan'))
+            print_info("Using 'Total Energy' template.")
         elif chosen_mode in ['aimd', 'aimd+d3']:
             template_string = CALC_AIMD_TEMPLATE
-            print(color_text("[INFO] Using 'AIMD' template.", 'cyan'))
+            print_info("Using 'AIMD' template.")
         elif chosen_mode in ['bands', 'bands+d3']:
             template_string = CALC_BANDS_TEMPLATE
-            print(color_text("[INFO] Using 'Bands' template.", 'cyan'))
+            print_info("Using 'Bands' template.")
         
         # --- Set D3 flag ---
         d3_flag = ".false."
         if chosen_mode in ['relax+d3', 'total_energy+d3', 'aimd+d3', 'bands+d3']:
             d3_flag = ".true."
-            print(color_text("[INFO] DFT-D3 (van der Waals) correction will be ENABLED.", 'cyan'))
+            print_info("DFT-D3 (van der Waals) correction will be ENABLED.")
         else:
             # 'relax', 'total_energy', 'aimd', or 'bands'
-            print(color_text("[INFO] DFT-D3 (van der Waals) correction will be DISABLED.", 'cyan'))
+            print_info("DFT-D3 (van der Waals) correction will be DISABLED.")
         
         d3_line_new = f"DFTD3                   {d3_flag}"
         template_lines = template_string.splitlines(keepends=True)
@@ -215,11 +215,11 @@ def generate_calculation(struct_file, chosen_mode, pp_path):
         if chosen_mode in ['aimd', 'aimd+d3']:
             # For AIMD, do nothing, keep the K-grid from the template
             replace_kgrid = False
-            print(color_text("[INFO] AIMD mode selected. K-grid will NOT be modified.", 'cyan'))
+            print_info("AIMD mode selected. K-grid will NOT be modified.")
         else:
             # For Total Energy, Relax, and Bands, calculate the K-grid
             replace_kgrid = True
-            print(color_text("[INFO] Calculating K-grid (density = 0.2 1/Å)...", 'cyan'))
+            print_info("Calculating K-grid (density = 0.2 1/Å)...")
             k_density = 0.2
             kgrid_divs = compute_monkhorts(lattice[0], lattice[1], lattice[2], k_density)
             kgrid_line_new = f"kgrid.MonkhorstPack   [{kgrid_divs[0]}  {kgrid_divs[1]}  {kgrid_divs[2]}]"
@@ -259,7 +259,8 @@ def generate_calculation(struct_file, chosen_mode, pp_path):
         with open(output_file, 'w') as f_output:
             f_output.writelines(output_lines)
         
-        print(color_text(f"\n[OK] File '{output_file}' generated successfully.", 'green'))
+        print()
+        print_ok(f"File '{output_file}' generated successfully.")
 
         # --- 5. Copy Pseudopotentials ---
         pp_warnings = []

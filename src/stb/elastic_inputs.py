@@ -9,7 +9,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import color_text, show_intro
+from stb.cli import color_text, show_intro, print_info, print_ok, print_error
 
 import os
 import sys
@@ -149,11 +149,11 @@ def main():
 
     try:
         lattice, raw_lines = read_fdf_structure(args.file)
-        print(f"{color_text('[INFO]', 'green')} Loaded: {args.file}")
+        print_info(f"Loaded: {args.file}")
     except Exception as e:
-        sys.exit(f"{color_text('[ERROR]', 'red')} {e}")
+        print_error(f"{e}"); sys.exit(1)
 
-    print(f"{color_text('[INFO]', 'green')} Modes: {dirs_to_run}")
+    print_info(f"Modes: {dirs_to_run}")
     
     count = 0
     strains = np.linspace(-args.max, args.max, args.steps)
@@ -173,7 +173,8 @@ def main():
             write_deformed_fdf(os.path.join(folder, args.output), raw_lines, new_lattice)
             count += 1
             
-    print(f"\n{color_text('[SUCCESS]', 'green')} Generated {count} structures.")
+    print()
+    print_ok(f"Generated {count} structures.")
     generate_verify_script()
     print(f"Run calculations inside each 'strain_...' folder.")
 

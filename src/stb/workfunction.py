@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import COLORS, color_text, show_intro, print_info, print_warn, print_error
 
 import os
 import sys
@@ -23,7 +23,8 @@ import matplotlib.pyplot as plt
 try:
     import sisl
 except ImportError:
-    print("\n" + color_text("[CRITICAL ERROR] sisl library not found.", 'red'))
+    print()
+    print_error("sisl library not found.")
     print("Please install it using: pip install sisl")
     sys.exit(1)
 
@@ -85,7 +86,7 @@ def get_fermi_robust(filepath):
                         pass
         return E_f
     except Exception as e:
-        print(f"{COLORS['red']}[ERROR] Parsing file {filepath}: {e}{COLORS['reset']}")
+        print_error(f"Parsing file {filepath}: {e}")
         return None
 
 def read_grid_data(grid_file):
@@ -95,7 +96,7 @@ def read_grid_data(grid_file):
         potential_ev = grid.grid * Ry2eV
         return grid, potential_ev
     except Exception as e:
-        print(f"{COLORS['red']}[ERROR] Reading grid: {e}{COLORS['reset']}")
+        print_error(f"Reading grid: {e}")
         sys.exit(1)
 
 def calculate_planar_avg(grid, potential_ev, axis):
@@ -170,8 +171,8 @@ def write_gnuplot_wf(z_vals, v_planar, E_f, E_vac, label):
     with open('workfunction.gplot', 'w') as file:
         file.writelines(fileout)
     
-    print(f"[INFO] Gnuplot script saved to 'workfunction.gplot'")
-    print(f"[INFO] Data saved to '{data_filename}'")
+    print_info(f"Gnuplot script saved to 'workfunction.gplot'")
+    print_info(f"Data saved to '{data_filename}'")
 
 def plot_matplotlib(z_vals, v_planar, E_f, E_vac, label, wf_val, axis):
     """Generates the Matplotlib preview."""
@@ -198,7 +199,7 @@ def plot_matplotlib(z_vals, v_planar, E_f, E_vac, label, wf_val, axis):
         plt.tight_layout()
         plt.show()
     except Exception as e:
-        print(f"{COLORS['yellow']}[WARNING] Could not create interactive plot: {e}{COLORS['reset']}")
+        print_warn(f"Could not create interactive plot: {e}")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -233,14 +234,15 @@ def main():
     print("-" * 60)
 
     # --- 1. Fermi Energy ---
-    print(f"\n[INFO] Detecting Fermi Energy...")
+    print()
+    print_info(f"Detecting Fermi Energy...")
     E_f = args.fermi 
     
     if E_f is None:
         if os.path.exists(out_file):
             E_f = get_fermi_robust(out_file)
         else:
-            print(f"{COLORS['yellow']}[WARNING] File {out_file} not found. Cannot auto-detect Fermi.{COLORS['reset']}")
+            print_warn(f"File {out_file} not found. Cannot auto-detect Fermi.")
 
     if E_f is None:
         print("\n" + color_text("FATAL ERROR: Could not determine Fermi Energy.", 'red'))
@@ -248,18 +250,18 @@ def main():
         print(f"  python {sys.argv[0]} -l {args.label} --fermi -3.635")
         sys.exit(1)
         
-    print(f"[INFO] Fermi Energy (Ef): {E_f:.6f} eV")
+    print_info(f"Fermi Energy (Ef): {E_f:.6f} eV")
 
     # --- 2. Grid Reading ---
     if not os.path.exists(grid_file):
-        print(f"{COLORS['red']}[ERROR] Grid file '{grid_file}' not found.{COLORS['reset']}")
+        print_error(f"Grid file '{grid_file}' not found.")
         sys.exit(1)
 
-    print(f"[INFO] Reading potential from {grid_file}...")
+    print_info(f"Reading potential from {grid_file}...")
     grid, potential_ev = read_grid_data(grid_file)
 
     # --- 3. Planar Average ---
-    print(f"[INFO] Calculating planar average along axis {args.axis}...")
+    print_info(f"Calculating planar average along axis {args.axis}...")
     z_vals, v_planar = calculate_planar_avg(grid, potential_ev, args.axis)
 
     # --- 4. Vacuum Level & Work Function ---
@@ -275,16 +277,17 @@ def main():
     print("-" * 40)
 
     if vac_std > 0.05:
-        print(f"{COLORS['yellow']}[WARNING] Vacuum plateau is noisy (std={vac_std:.3f} eV). Results might be inaccurate.{COLORS['reset']}")
+        print_warn(f"Vacuum plateau is noisy (std={vac_std:.3f} eV). Results might be inaccurate.")
 
     # --- 6. Output Files & Plotting ---
-    print(f"[INFO] Writing output files...")
+    print_info(f"Writing output files...")
     write_gnuplot_wf(z_vals, v_planar, E_f, E_vac, args.label)
 
     if not args.no_plot:
         plot_matplotlib(z_vals, v_planar, E_f, E_vac, args.label, WF, args.axis)
 
-    print("\n[INFO] Complete job!") 
+    print()
+    print_info("Complete job!")
     print("\n"+"-"*60)
     print(color_text("Work Function calculated. Now I need a vacation.\n\n", 'bold'))
 
