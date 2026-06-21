@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"    
-from stb.cli import color_text, show_intro, print_info, print_ok
+from stb.cli import color_text, show_intro, print_info, print_ok, print_warn, print_error
 
 import numpy as np
 import math
@@ -926,179 +926,161 @@ def compute_monkhorts(cella, cellb, cellc, k_density):
     divisions = [max(1, math.ceil(length / k_density)) for length in lengths]
     return divisions
 
+def _section(title: str) -> None:
+    """Print a styled section separator."""
+    bar = color_text("─" * 60, 'blue')
+    print(f"\n{bar}")
+    print(color_text(f"  {title}", 'bold'))
+    print(bar)
+
+
 def copy_pseudopotentials(species_list, pp_path):
     """
-    Copies the required .psml or .psf files from the 'pp_path' folder to
-    the current working directory. Prioritizes .psml if both exist.
-    Returns a list of warnings/errors.
+    Copies required .psml or .psf files from pp_path to the current directory.
+    Prioritises .psml. Returns a list of (ok, message) tuples.
     """
-    warnings = []
+    _section("Pseudopotentials")
+
     if not os.path.isdir(pp_path):
-        warnings.append(f"Warning: PP path '{pp_path}' is not a valid directory. PPs not copied.")
-        return warnings
+        print_warn(f"PP path '{pp_path}' is not a valid directory — skipping copy.")
+        return
 
-    print("\n--- Copying Pseudopotentials ---")
-    copied_files = 0
+    copied, failed = 0, 0
     for symbol in species_list:
-        psml_filename = f"{symbol}.psml"
-        psf_filename = f"{symbol}.psf"
-        
-        source_psml = os.path.join(pp_path, psml_filename)
-        source_psf = os.path.join(pp_path, psf_filename)
-        
-        dest_psml = os.path.join(os.getcwd(), psml_filename)
-        dest_psf = os.path.join(os.getcwd(), psf_filename)
-        
-        if os.path.exists(source_psml):
-            try:
-                shutil.copy2(source_psml, dest_psml)
-                print_ok(f"Copied: {psml_filename}")
-                copied_files += 1
-            except Exception as e:
-                warnings.append(f"  [ERROR] Failed to copy {psml_filename}: {e}")
-                
-        elif os.path.exists(source_psf):
-            try:
-                shutil.copy2(source_psf, dest_psf)
-                print_ok(f"Copied: {psf_filename}")
-                copied_files += 1
-            except Exception as e:
-                warnings.append(f"  [ERROR] Failed to copy {psf_filename}: {e}")
-                
-        else:
-            warnings.append(f"  [WARNING] Neither {psml_filename} nor {psf_filename} found in {pp_path}")
+        psml = f"{symbol}.psml"
+        psf  = f"{symbol}.psf"
+        src_psml = os.path.join(pp_path, psml)
+        src_psf  = os.path.join(pp_path, psf)
 
-    if copied_files == len(species_list):
-        print("All pseudopotentials copied successfully.")
+        if os.path.exists(src_psml):
+            try:
+                shutil.copy2(src_psml, psml)
+                print_ok(f"Copied  {psml}")
+                copied += 1
+            except Exception as e:
+                print_error(f"Failed to copy {psml}: {e}")
+                failed += 1
+        elif os.path.exists(src_psf):
+            try:
+                shutil.copy2(src_psf, psf)
+                print_ok(f"Copied  {psf}")
+                copied += 1
+            except Exception as e:
+                print_error(f"Failed to copy {psf}: {e}")
+                failed += 1
+        else:
+            print_warn(f"Not found: {psml} or {psf} in '{pp_path}'")
+            failed += 1
+
+    print()
+    if failed == 0:
+        print_ok(f"All pseudopotentials copied ({copied}/{len(species_list)})")
     else:
-        warnings.append("Warning: Some PP files were not found or could not be copied.")
-    print("----------------------------------")
-    
-    return warnings
+        print_warn(f"Copied {copied}/{len(species_list)} — {failed} missing")
 
-# --- Main Generation Logic Function ---
+
 def generate_calculation(struct_file, chosen_mode, pp_path):
-    """
-    Main function that executes the file generation logic.
-    """
+    """Main generation logic: parse structure, fill template, write calc.fdf."""
+    output_file = "calc.fdf"
+
+    # ── Header ────────────────────────────────────────────────────
+    bar = color_text("═" * 60, 'blue')
+    print(f"\n{bar}")
+    print(color_text("  SIESTA Input File Generator", 'bold'))
+    print(bar)
+
+    def _row(label, value):
+        print(f"  {color_text(label, 'cyan')}  {value}")
+
+    _row("Structure :", struct_file)
+    _row("Mode      :", color_text(chosen_mode, 'yellow'))
+    _row("PP path   :", pp_path if pp_path else color_text("(none)", 'yellow'))
+    _row("Output    :", output_file)
+    print()
+
     try:
-        # --- 1. Input Validation ---
+        # ── 1. Validate input ──────────────────────────────────────
         if not os.path.exists(struct_file):
-            print(f"Error: Structure file '{struct_file}' not found.")
-            return # Abort the function
+            print_error(f"Structure file '{struct_file}' not found.")
+            return
 
-        if not pp_path:
-            print_info("PP path is blank. Skipping pseudopotential copy.")
-        else:
-            print_info(f"PP path set to: {pp_path}")
+        # ── 2. Select template ─────────────────────────────────────
+        _section("Template")
+        templates = {
+            'relax':        ('Structural Relaxation',  CALC_RELAX_TEMPLATE),
+            'relax+d3':     ('Structural Relaxation + DFT-D3', CALC_RELAX_TEMPLATE),
+            'total_energy': ('Total Energy',           CALC_TOTAL_ENERGY_TEMPLATE),
+            'total_energy+d3': ('Total Energy + DFT-D3', CALC_TOTAL_ENERGY_TEMPLATE),
+            'aimd':         ('Ab Initio MD',           CALC_AIMD_TEMPLATE),
+            'aimd+d3':      ('Ab Initio MD + DFT-D3',  CALC_AIMD_TEMPLATE),
+            'bands':        ('Band Structure',         CALC_BANDS_TEMPLATE),
+            'bands+d3':     ('Band Structure + DFT-D3', CALC_BANDS_TEMPLATE),
+        }
+        label, template_string = templates[chosen_mode]
+        print_info(f"Template  : {label}")
 
-        print_info(f"Mode selected: {chosen_mode}")
+        use_d3 = chosen_mode.endswith('+d3')
+        d3_status = color_text('ENABLED', 'green') if use_d3 else color_text('disabled', 'yellow')
+        print_info(f"DFT-D3    : {d3_status}")
+        d3_line_new = f"DFTD3                   {'.true.' if use_d3 else '.false.'}"
 
-        # --- 2. Start Generation Logic ---
-        print(f"\nProcessing '{struct_file}'...")
-        
-        output_file = "calc.fdf" # Fixed output name
-        
-        # --- Select Template ---
-        template_string = ""
-        if chosen_mode in ['relax', 'relax+d3']:
-            template_string = CALC_RELAX_TEMPLATE
-            print_info("Using 'Relax' template.")
-        elif chosen_mode in ['total_energy', 'total_energy+d3']:
-            template_string = CALC_TOTAL_ENERGY_TEMPLATE
-            print_info("Using 'Total Energy' template.")
-        elif chosen_mode in ['aimd', 'aimd+d3']:
-            template_string = CALC_AIMD_TEMPLATE
-            print_info("Using 'AIMD' template.")
-        elif chosen_mode in ['bands', 'bands+d3']:
-            template_string = CALC_BANDS_TEMPLATE
-            print_info("Using 'Bands' template.")
-        
-        # --- Set D3 flag ---
-        d3_flag = ".false."
-        if chosen_mode in ['relax+d3', 'total_energy+d3', 'aimd+d3', 'bands+d3']:
-            d3_flag = ".true."
-            print_info("DFT-D3 (van der Waals) correction will be ENABLED.")
-        else:
-            # 'relax', 'total_energy', 'aimd', or 'bands'
-            print_info("DFT-D3 (van der Waals) correction will be DISABLED.")
-        
-        d3_line_new = f"DFTD3                   {d3_flag}"
-        template_lines = template_string.splitlines(keepends=True)
-
-        # Parse structure and get species
+        # ── 3. Parse structure ─────────────────────────────────────
+        _section("Structure")
         lattice, species = parse_structure_fdf(struct_file)
-        print(f"  Species found: {', '.join(species)}")
+        vol = abs(np.dot(lattice[0], np.cross(lattice[1], lattice[2])))
+        a, b, c = [np.linalg.norm(v) for v in lattice]
+        print_info(f"Species   : {color_text(', '.join(species), 'yellow')}")
+        print_info(f"Cell a/b/c: {a:.4f}  {b:.4f}  {c:.4f}  Å")
+        print_info(f"Volume    : {vol:.4f}  Å³")
 
-        # --- K-Grid Conditional Logic ---
-        replace_kgrid = False
-        kgrid_line_new = "" # Initialize
-        
-        if chosen_mode in ['aimd', 'aimd+d3']:
-            # For AIMD, do nothing, keep the K-grid from the template
-            replace_kgrid = False
-            print_info("AIMD mode selected. K-grid will NOT be modified.")
-        else:
-            # For Total Energy, Relax, and Bands, calculate the K-grid
-            replace_kgrid = True
-            print_info("Calculating K-grid (density = 0.2 1/Å)...")
+        # ── 4. K-grid ──────────────────────────────────────────────
+        _section("K-Grid")
+        replace_kgrid = chosen_mode not in ('aimd', 'aimd+d3')
+        kgrid_line_new = ""
+        if replace_kgrid:
             k_density = 0.2
-            kgrid_divs = compute_monkhorts(lattice[0], lattice[1], lattice[2], k_density)
-            kgrid_line_new = f"kgrid.MonkhorstPack   [{kgrid_divs[0]}  {kgrid_divs[1]}  {kgrid_divs[2]}]"
-            print(f"  Suggested K-grid: {kgrid_divs[0]} {kgrid_divs[1]} {kgrid_divs[2]}")
+            kd = compute_monkhorts(lattice[0], lattice[1], lattice[2], k_density)
+            kgrid_line_new = f"kgrid.MonkhorstPack   [{kd[0]}  {kd[1]}  {kd[2]}]"
+            print_info(f"Density   : {k_density} Å⁻¹  →  grid {color_text(f'{kd[0]} × {kd[1]} × {kd[2]}', 'green')}")
+        else:
+            print_info("AIMD mode — k-grid kept from template (not modified)")
 
-        
-        # Use only the base file name for the include
+        # ── 5. Write output ────────────────────────────────────────
+        _section("Writing Output")
         include_line_new = f"%include {os.path.basename(struct_file)}"
-
-        # Process the template and replace lines
-        print(f"Writing '{output_file}'...")
         output_lines = []
-        for line in template_lines:
-            line_stripped_lower = line.strip().lower()
-            
-            # Replace the structure include line
-            if line_stripped_lower.startswith('%include') and 'struct' in line_stripped_lower:
+        for line in template_string.splitlines(keepends=True):
+            low = line.strip().lower()
+            if low.startswith('%include') and 'struct' in low:
                 output_lines.append(include_line_new + '\n')
-            
-            # Replace the k-grid (if not AIMD)
-            elif line_stripped_lower.startswith('kgrid.monkhorstpack'):
-                if replace_kgrid:
-                    output_lines.append(kgrid_line_new + '\n')
-                else:
-                    # Keep the original template line (for AIMD)
-                    output_lines.append(line)
-            
-            # Replace the D3 flag
-            elif line_stripped_lower.startswith('dftd3'):
+            elif low.startswith('kgrid.monkhorstpack') and replace_kgrid:
+                output_lines.append(kgrid_line_new + '\n')
+            elif low.startswith('dftd3'):
                 output_lines.append(d3_line_new + '\n')
-            
             else:
-                # Keep the original template line
                 output_lines.append(line)
-        
-        # Write the output file
-        with open(output_file, 'w') as f_output:
-            f_output.writelines(output_lines)
-        
-        print()
-        print_ok(f"File '{output_file}' generated successfully.")
 
-        # --- 5. Copy Pseudopotentials ---
-        pp_warnings = []
+        with open(output_file, 'w') as f:
+            f.writelines(output_lines)
+
+        print_info(f"Writing   : {output_file}  ({len(output_lines)} lines)")
+        print()
+        print_ok(f"'{output_file}' generated successfully.")
+
+        # ── 6. Pseudopotentials ────────────────────────────────────
         if pp_path:
-            pp_warnings = copy_pseudopotentials(species, pp_path)
-        
-        if pp_warnings:
-            print("\n--- Pseudopotential Log ---")
-            for warning in pp_warnings:
-                print(warning)
+            copy_pseudopotentials(species, pp_path)
+
+        # ── Footer ─────────────────────────────────────────────────
+        print()
+        print(color_text("═" * 60, 'blue'))
+        print(color_text("  Done. Edit calc.fdf to adjust calculation parameters.", 'bold'))
+        print(color_text("═" * 60, 'blue') + "\n")
 
     except Exception as e:
-        # Catch any errors (e.g., File not found, Zero cell volume)
-        print(f"\n--- ERROR ---")
-        print(f"An error occurred: {e}")
-        print("Operation aborted.")
+        print()
+        print_error(f"An error occurred: {e}")
+        print_error("Operation aborted.")
 
 # --- Main Function (Argument Parser) ---
 def main():
@@ -1156,17 +1138,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.intro == True:
+    if args.intro:
         show_intro()
 
-    print("\n" + color_text("Create a input file from structure in fdf format (converted by STB):", 'bold'))
-    print("-"*60)
-
-    # Process the arguments provided on the command line
-    args = parser.parse_args()
-
-    # Call the main logic function with the processed arguments
-    print("--- Siesta Calculation Preparer ---")
     generate_calculation(args.structure_file, args.calc_type, args.pp_path)
 
 # --- Script Entry Point ---
