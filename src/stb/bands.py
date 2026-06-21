@@ -11,18 +11,12 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 import os
-import sys
-import warnings
-import subprocess
 import argparse
-import textwrap
-from typing import List, Dict
 import numpy as np
 import re
-import argparse
 import matplotlib.pyplot as plt
 
 def plot_gnuplot(high_sym):

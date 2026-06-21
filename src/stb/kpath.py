@@ -238,7 +238,7 @@ def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_f
 def write_siesta_kpath_file_fixed(kpoints_dict, path_sequence, num_points, output_filename):
     """
     Emergency "helper" function to write the file if the KeyError
-    for '\Gamma' vs 'GAMMA' occurs.
+    for '\\Gamma' vs 'GAMMA' occurs.
     """
     print(f"  {COLORS['cyan']}Retrying file write with 'GAMMA' label...{COLORS['reset']}")
     try:

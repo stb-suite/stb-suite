@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"    
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 import argparse
 import numpy as np
@@ -163,7 +163,7 @@ def print_density_recommendation():
     print("  0.10 – 0.30          Medium precision")
     print("  0.30 – 0.50          Low precision")
     print()
-    print("  ⚠️  Tip: For most systems, a density between 0.2 and 0.3 is")
+    print(color_text("  [TIP] For most systems, a density between 0.2 and 0.3 is", 'yellow'))
     print("     generally accurate enough while keeping cost reasonable.")
     print("="*65 + "\n")
 
@@ -229,19 +229,19 @@ def main():
     try:
         # --- Updated Decision Logic ---
         if file_type == 'cif':
-            print(f"ℹ️  Reading file '{filename}' as type '{file_type}' (using ASE)...")
+            print(color_text(f"[INFO] Reading file '{filename}' as type '{file_type}' (using ASE)...", 'cyan'))
             lattice = parse_cif(filename)
             
         elif file_type == 'poscar':
-            print(f"ℹ️  Reading file '{filename}' as type '{file_type}' (native method)...")
+            print(color_text(f"[INFO] Reading file '{filename}' as type '{file_type}' (native method)...", 'cyan'))
             lattice = parse_poscar(filename)
 
         elif file_type == 'fhi': # Changed from 'geometry'
-            print(f"ℹ️  Reading file '{filename}' as type '{file_type}' (native method)...")
+            print(color_text(f"[INFO] Reading file '{filename}' as type '{file_type}' (native method)...", 'cyan'))
             lattice = parse_fhi(filename) # Renamed function call
 
         elif file_type == 'fdf':
-            print(f"ℹ️  Reading file '{filename}' as type '{file_type}' (native method)...")
+            print(color_text(f"[INFO] Reading file '{filename}' as type '{file_type}' (native method)...", 'cyan'))
             lattice = parse_fdf(filename)
         # --- End of Update ---
             
@@ -259,7 +259,7 @@ def main():
     print_density_recommendation()
     
     # Print the suggested grid
-    print(f"✅ Suggested Monkhorst-Pack grid: {divisions[0]} {divisions[1]} {divisions[2]}\n")
+    print(color_text(f"[OK] Suggested Monkhorst-Pack grid: {divisions[0]} {divisions[1]} {divisions[2]}", 'green') + "\n")
     
     # --- New feature ---
     # Analyze and print dimensionality

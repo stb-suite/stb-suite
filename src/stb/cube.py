@@ -22,7 +22,7 @@ import numpy as np
 try:
     import sisl
 except ImportError:
-    print("\n\033[91m[CRITICAL ERROR] sisl library not found.\033[0m")
+    print("\n" + color_text("[CRITICAL ERROR] sisl library not found.", 'red'))
     print("Please install it using: pip install sisl")
     sys.exit(1)
 

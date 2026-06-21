@@ -18,7 +18,7 @@ import os
 from ase.io import read
 from ase.geometry import cell_to_cellpar
 import spglib
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 def read_structure(filename, filetype):
     filetype = filetype.lower()

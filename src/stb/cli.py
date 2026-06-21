@@ -20,6 +20,7 @@ COLORS = {
     'underline': '\033[4m',
     'bg_red':    '\033[41m',
     'white':     '\033[97m',
+    'magenta':   '\033[95m',
 }
 
 

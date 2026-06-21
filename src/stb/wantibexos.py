@@ -12,7 +12,7 @@ import textwrap
 import numpy as np
 import sisl
 from typing import Tuple
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 try:
     from importlib.metadata import version as _pkg_version

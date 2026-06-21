@@ -15,7 +15,7 @@ except Exception:
 import os
 import sys
 import argparse
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 def get_atom_counts(fdf_path):
     """Parses structure.fdf to count the number of atoms for each chemical species"""

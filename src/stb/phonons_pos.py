@@ -11,7 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 import os
 import sys

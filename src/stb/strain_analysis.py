@@ -12,7 +12,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 import os
 import sys
@@ -169,7 +169,7 @@ def main():
     
     folders = [d for d in os.listdir('.') if os.path.isdir(d) and d.startswith('strain_')]
     if not folders:
-        sys.exit(color_text("[ERROR] No 'strain_*' folders found.", 'red'))
+        print(color_text("[ERROR] No 'strain_*' folders found.", 'red')); sys.exit(1)
         
     data = []
     detected_dir = "xx"
@@ -196,7 +196,7 @@ def main():
                 print(f"   Reading {f}: Strain {val:>5.2f}% OK")
     
     if not data:
-        sys.exit(color_text("[ERROR] No stress data found.", 'red'))
+        print(color_text("[ERROR] No stress data found.", 'red')); sys.exit(1)
         
     # Sort and Convert
     data = np.array(sorted(data, key=lambda x: x[0]))

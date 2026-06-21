@@ -19,7 +19,7 @@ import math
 import shutil
 import argparse
 import numpy as np
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 # Base Template
 CALC_TEMPLATE = """

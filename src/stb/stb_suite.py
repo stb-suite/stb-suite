@@ -11,14 +11,13 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"  
-from stb.cli import COLORS, color_text, show_intro
+from stb.cli import color_text, show_intro
 
 import os
 import subprocess
 from time import sleep
-import argparse
 import textwrap
-from typing import List, Dict, Callable
+from typing import List, Dict
 
 try:
     import readline
@@ -110,7 +109,7 @@ def run_phonon_postprocessing() -> None:
     if not sys_label:
         sys_label = "siesta"
         
-    # 3. Malha Q (Mesh)
+    # 3. Q-point mesh
     mesh_input = get_input("\nQ-point mesh (e.g. '20 20 20') [default: 20 20 20]: ").strip()
     if not mesh_input:
         m_x, m_y, m_z = 20, 20, 20
@@ -126,7 +125,7 @@ def run_phonon_postprocessing() -> None:
             print(color_text("Invalid input format. Using default 20 20 20.", 'yellow'))
             m_x, m_y, m_z = 20, 20, 20
 
-    # 4. Temperaturas
+    # 4. Temperature range
     print(f"\n{color_text('Thermal Properties Settings:', 'yellow')}")
     tmin = get_float_input("Minimum temperature (K) [default: 0]: ", 0.0)
     tmax = get_float_input("Maximum temperature (K) [default: 1000]: ", 1000.0)
