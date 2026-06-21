@@ -11,13 +11,13 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from time import sleep
 
 # Try to import sisl
 try:
@@ -29,55 +29,6 @@ except ImportError:
 
 # Constants
 Ry2eV = 13.605693123
-
-# ANSI Colors for terminal
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Returns text formatted with ANSI color."""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Displays the stylized STB-SUITE introduction."""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite - Work Function",
-        "A comprehensive toolkit for SIESTA DFT simulations",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        "Developed by Dr. Carlos M. O. Bastos"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.1)
-    print("="*60 + "\n")
-    return
 
 def get_fermi_robust(filepath):
     """

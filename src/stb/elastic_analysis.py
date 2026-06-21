@@ -11,74 +11,18 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5" # Atualizado versão para refletir a mudança
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
 import argparse
 import re
 import numpy as np
-from time import sleep
 from scipy.stats import linregress
 
 # ==========================================
 #           UI / VISUALS
 # ==========================================
-
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m',
-    'magenta': '\033[95m' # Header color
-}
-
-def color_text(text: str, color: str) -> str:
-    """Returns text formatted with ANSI color codes."""
-    return f"{COLORS.get(color, COLORS['reset'])}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Displays the stylized STB-SUITE introduction."""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite - Elastic Analyzer",
-        "Elastic Constants & Stability Calculator",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        "Integrated Style Refactoring"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.1)
-    print("="*60 + "\n")
-
-# ==========================================
-#           HELPERS & CONFIG
-# ==========================================
-
-CONV_EVA3_TO_GPA = 160.21766
-CONV_EVA2_TO_NM = 16.021766
-REPORT_FILE = "mechanical_properties.txt"
 
 def print_dual(text, file_handle=None):
     """Prints to stdout with color, writes to file without color."""
@@ -333,7 +277,6 @@ def main():
         print(f"{color_text('[FAIL]', 'red')} No valid data found in strain folders.")
         print(f"       Check if '{args.file}' exists and has 'Stress tensor'.")
         sys.exit(1)
-
 
 # --- C_ij Calculation ---
     C = np.zeros((6, 6))

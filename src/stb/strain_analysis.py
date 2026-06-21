@@ -12,6 +12,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
@@ -24,49 +25,6 @@ from scipy.integrate import trapezoid
 
 # ==========================================
 #           UI / VISUALS
-# ==========================================
-
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m',
-    'magenta': '\033[95m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Returns text formatted with ANSI color codes."""
-    return f"{COLORS.get(color, COLORS['reset'])}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Displays the stylized STB-SUITE introduction."""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
-""", 'cyan')
-    
-    print(logo)
-    print(color_text(f"   Siesta Tool Box - Mechanical Analysis v{VERSION}", 'yellow'))
-    print(color_text("   Developed by Dr. Carlos M. O. Bastos", 'blue'))
-    print(color_text("   bastoscmo.github.io\n", 'blue'))
-
-# ==========================================
-#           CORE LOGIC
 # ==========================================
 
 def parse_folder_name(folder_name):

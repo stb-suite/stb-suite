@@ -14,6 +14,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
+from stb.cli import COLORS, color_text, show_intro
 
 import xml.etree.ElementTree as ET
 import numpy as np
@@ -21,19 +22,6 @@ import os
 import pandas as pd
 import argparse
 import sys
-from time import sleep
-
-
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
 
 # --- NEW: Map for (l,m) detailed projections ---
 # This defines the standard SIESTA order for real spherical harmonics
@@ -54,45 +42,6 @@ ORBITAL_ORDER = [
     'f-3', 'f-2', 'f-1', 'f0', 'f1', 'f2', 'f3',
     'f' # For 'l' mode
 ]
-
-
-def color_text(text: str, color: str) -> str:
-    """Returns ANSI color-formatted text"""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Displays the stylized STB-SUITE introduction"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite",
-        "A comprehensive toolkit for SIESTA DFT simulations",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        "Developed by Dr. Carlos M. O. Bastos"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.2)
-    print("="*60 + "\n")
-    return
-
 
 def parse_data_string(data_str):
     """
@@ -175,7 +124,6 @@ def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
 
         print(f"Found {len(all_orbital_tags)} <orbital> tags to process...")
         print(f"Using orbital projection mode: '{projection_mode}'")
-
 
         atom_data = {}
         all_species = set()
@@ -404,7 +352,6 @@ def main():
     parser.add_argument("--no-intro", dest="intro", action="store_false", help="Do not show the introduction")
 
     args = parser.parse_args()
-
 
     if args.intro == True:
         show_intro()

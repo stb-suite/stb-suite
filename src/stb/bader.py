@@ -11,13 +11,13 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"  
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
 import argparse
 import warnings
 import multiprocessing
-from time import sleep
 
 # --- Warnings Configuration ---
 warnings.filterwarnings("ignore", category=UserWarning, module="pybader")
@@ -39,74 +39,6 @@ PyBaderCalc = pybader.interface.Bader
 #    except Exception:
 #        print("\033[91m[CRITICAL] Could not initialize PyBader interface. Install setuptools.\033[0m")
 #        sys.exit(1)
-
-
-# ================= ANSI COLORS =================
-COLORS = {
-    'reset': '\033[0m', 'cyan': '\033[96m', 'blue': '\033[94m',
-    'green': '\033[92m', 'yellow': '\033[93m', 'red': '\033[91m',
-    'bold': '\033[1m', 'underline': '\033[4m',
-    'bg_red': '\033[41m', 'white': '\033[97m' # High visibility
-}
-
-def color_text(text: str, color: str) -> str:
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    os.system('cls' if os.name == 'nt' else 'clear')
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-    print(logo)
-    print("\n" + "="*60)
-    print("Siesta ToolBox Suite - Bader Analysis".center(60))
-    print(f"Version {VERSION} | University of Brasilia".center(60))
-    print("="*60 + "\n")
-
-# ================= SCIENTIFIC DATA =================
-
-# FALLBACK DICTIONARY
-# Contains standard chemical valence (s+p for main group, s+d for transition).
-# NOTE: DFT pseudopotentials (especially with semi-core states) may differ.
-#       This is used ONLY if the .out file cannot be parsed.
-FALLBACK_VALENCE = {
-    # Period 1
-    "H": 1.0,  "He": 2.0,
-    # Period 2
-    "Li": 1.0, "Be": 2.0, "B": 3.0,  "C": 4.0,  "N": 5.0,  "O": 6.0,  "F": 7.0,  "Ne": 8.0,
-    # Period 3
-    "Na": 1.0, "Mg": 2.0, "Al": 3.0, "Si": 4.0, "P": 5.0,  "S": 6.0,  "Cl": 7.0, "Ar": 8.0,
-    # Period 4
-    "K": 1.0,  "Ca": 2.0, "Sc": 3.0, "Ti": 4.0, "V": 5.0,  "Cr": 6.0, "Mn": 7.0, "Fe": 8.0,
-    "Co": 9.0, "Ni": 10.0,"Cu": 11.0,"Zn": 12.0,"Ga": 3.0, "Ge": 4.0, "As": 5.0, "Se": 6.0,
-    "Br": 7.0, "Kr": 8.0,
-    # Period 5
-    "Rb": 1.0, "Sr": 2.0, "Y": 3.0,  "Zr": 4.0, "Nb": 5.0, "Mo": 6.0, "Tc": 7.0, "Ru": 8.0,
-    "Rh": 9.0, "Pd": 10.0,"Ag": 11.0,"Cd": 12.0,"In": 3.0, "Sn": 4.0, "Sb": 5.0, "Te": 6.0,
-    "I": 7.0,  "Xe": 8.0,
-    # Period 6 (Lanthanides usually 3, but can vary in DFT)
-    "Cs": 1.0, "Ba": 2.0,
-    "La": 3.0, "Ce": 4.0, "Pr": 3.0, "Nd": 3.0, "Pm": 3.0, "Sm": 3.0, "Eu": 2.0, "Gd": 3.0,
-    "Tb": 3.0, "Dy": 3.0, "Ho": 3.0, "Er": 3.0, "Tm": 3.0, "Yb": 2.0, "Lu": 3.0,
-    "Hf": 4.0, "Ta": 5.0, "W": 6.0,  "Re": 7.0, "Os": 8.0, "Ir": 9.0, "Pt": 10.0,"Au": 11.0,
-    "Hg": 12.0,"Tl": 3.0, "Pb": 4.0, "Bi": 5.0, "Po": 6.0, "At": 7.0, "Rn": 8.0,
-    # Period 7 (Actinides)
-    "Fr": 1.0, "Ra": 2.0,
-    "Ac": 3.0, "Th": 4.0, "Pa": 5.0, "U": 6.0,  "Np": 5.0, "Pu": 4.0, "Am": 3.0, "Cm": 3.0,
-    "Bk": 3.0, "Cf": 3.0, "Es": 3.0, "Fm": 3.0, "Md": 3.0, "No": 2.0, "Lr": 3.0,
-    "Rf": 4.0, "Db": 5.0, "Sg": 6.0, "Bh": 7.0, "Hs": 8.0, "Mt": 9.0, "Ds": 10.0,"Rg": 11.0,
-    "Cn": 12.0,"Nh": 3.0, "Fl": 4.0, "Mc": 5.0, "Lv": 6.0, "Ts": 7.0, "Og": 8.0
-}
 
 def get_zval_from_output(label, override_path=None):
     """

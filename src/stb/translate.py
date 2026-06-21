@@ -11,12 +11,12 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"    
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
 import warnings
 import subprocess
-from time import sleep
 import argparse
 import textwrap
 from typing import List, Dict
@@ -24,66 +24,6 @@ import argparse
 from ase.io import read as ase_read
 import numpy as np
 
-
-# Cores ANSI para terminal
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Retorna texto formatado com cor ANSI"""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Exibe a introdução estilizada da STB-SUITE"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite",
-        "A comprehensive toolkit for SIESTA DFT simulations",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        "Developed by Dr. Carlos M. O. Bastos"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.2)
-    print("="*60 + "\n")
-    return
-
-# Import libraries:
-
-# Supported formats
-##### MODIFICADO #####
-# Adicionado "fdf" aos formatos de entrada
-INPUT_FORMATS = {"poscar", "cif", "siesta", "xyz", "fhi", "dftb", "xsf", "fdf"} 
-OUTPUT_FORMATS = {"cif","xyz", "poscar", "fdf", "dftb", "xsf", "fhi"}
-
-
-# Dictionary with all periodic elements table
 def periodic_table():
     element_atomicnumber = {
         "H": 1,     # Hidrogênio
@@ -210,13 +150,11 @@ def periodic_table():
     atomicnumber_element = {str(v): k for k, v in element_atomicnumber.items()}
     return element_atomicnumber, atomicnumber_element
 
-
 def readfile(filedata):
     with open(filedata, 'r') as fil:
         data = [line.split() for line in fil if line.strip()
                 ]
     return data
-
 
 def dic_atoms_position(atomsposition):
     dic_atomspos = {}
@@ -225,7 +163,6 @@ def dic_atoms_position(atomsposition):
             dic_atomspos[elt[0]] = []
         dic_atomspos[elt[0]].append([elt[1], elt[2], elt[3]])
     return dic_atomspos
-
 
 ############# Extract Data Functions ######################
 
@@ -257,7 +194,6 @@ def getatomsandvectors_xyz(dataxyz, latticedata):
     atomic_position = dic_atoms_position(atomsposition)
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
 
-
 # This Function define the number of atoms types for vasp file
 def getatomsandvectors_vasp(poscar):
     element, atomicnumber = periodic_table()
@@ -276,7 +212,6 @@ def getatomsandvectors_vasp(poscar):
             cont = cont+1
     atomic_position = dic_atoms_position(atomsposition)
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
-
 
 # This Function define the data for cif file
 def getatomsandvectors_fhi(input_fhi):
@@ -312,7 +247,6 @@ def getatomsandvectors_fhi(input_fhi):
 
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
 
-
 # This Function define the data for cif file
 # This Function define the data for cif file
 def getatomsandvectors_cif(input_cif):
@@ -339,7 +273,6 @@ def getatomsandvectors_cif(input_cif):
         print(color_text(f"[ERRO] Falha ao ler o arquivo CIF com ASE: {e}", 'red'))
         print(color_text("       Verifique se a biblioteca 'ase' está instalada (pip install ase)", 'yellow'))
         sys.exit(1)
-
 
     # 3. Extrair vetores de rede (vectors)
     # O método .get_cell() da ASE retorna os vetores de rede completos,
@@ -416,7 +349,6 @@ def getatomsandvectors_siesta(input_siesta):
             [position[2], position[3], position[4]])
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
 
-
 def getatomsandvectors_dftb(input_dftb):
     element, atomicnumber = periodic_table()
     datadftb = readfile(input_dftb)
@@ -451,7 +383,6 @@ def getatomsandvectors_dftb(input_dftb):
         icont = icont+1
 
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
-
 
 def getatomsandvectors_xsf(input_xsf):
     print("[WARNING] Only for PRIMVEC format")
@@ -602,9 +533,7 @@ def getatomsandvectors_fdf(input_fdf):
     return typevectors, latticeparameter, vectors, getatoms, atomic_position
 ##### FIM DA NOVA FUNÇÃO #####
 
-
 ###################### Write functions ################
-
 
 def writefilefdf(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
@@ -651,7 +580,6 @@ def writefilefdf(typevectors, latticeparameter, vectors, getatoms, atomsposition
     outfile.append("%endblock AtomicCoordinatesAndAtomicSpecies")
     np.savetxt(outfilename, outfile, fmt='%s')
     return
-
 
 def writefileposcar(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
@@ -758,9 +686,6 @@ def writefilecif(typevectors, latticeparameter, vectors, getatoms, atomsposition
     np.savetxt(outfilename, outfile, fmt='%s')
     return
 
-
-
-
 def writefilexyz(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
     # --- NEW: Conversion logic for XYZ ---
@@ -793,7 +718,6 @@ def writefilexyz(typevectors, latticeparameter, vectors, getatoms, atomsposition
 
     np.savetxt(outfilename, outfile, fmt='%s')
     return
-
 
 def writefiledftb(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
@@ -838,7 +762,6 @@ def writefiledftb(typevectors, latticeparameter, vectors, getatoms, atomspositio
     np.savetxt(outfilename, outfile, fmt='%s')
     return
 
-
 def writefilexsf(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
     # --- NEW: Conversion logic for XSF ---
@@ -880,7 +803,6 @@ def writefilexsf(typevectors, latticeparameter, vectors, getatoms, atomsposition
     np.savetxt(outfilename, outfile, fmt='%s')
     return
 
-
 def writefilefhi(typevectors, latticeparameter, vectors, getatoms, atomsposition, outfilename, coord_format=None):
     
     # --- NEW: Convert coordinates ---
@@ -916,7 +838,6 @@ def writefilefhi(typevectors, latticeparameter, vectors, getatoms, atomsposition
 
     np.savetxt(outfilename, outfile, fmt='%s')
     return
-
 
 ##### NEW HELPER FUNCTION #####
 def convert_coordinates(typevectors_in: str, 
@@ -995,7 +916,6 @@ def convert_coordinates(typevectors_in: str,
     return typevectors_in, atomsposition_in
 ##### END NEW HELPER FUNCTION #####
 
-
 def main():
 
     parser = argparse.ArgumentParser(
@@ -1031,15 +951,11 @@ def main():
 
     args = parser.parse_args()
 
-
     if args.intro == True:
         show_intro()
 
     print("\n" + color_text("TRANSLATE:", 'bold'))
     print("-"*60)
-
-
-
 
     # Validate lattice parameter requirement
     if args.in_format == "xyz" and not args.lattice:
@@ -1051,7 +967,6 @@ def main():
     # Add info about coordinate format
     if args.coord_format:
         print(f"[INFO] Requested output coordinate format: {args.coord_format}")
-
 
     if args.out_format == "xyz":
         print(f"[INFO] Lattice vector file: {args.lattice}")

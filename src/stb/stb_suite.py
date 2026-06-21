@@ -11,6 +11,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"  
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
@@ -25,54 +26,6 @@ try:
     readline.parse_and_bind("tab: complete")
 except ImportError:
     pass 
-
-
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Returns text formatted with ANSI color"""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Displays the stylized STB-SUITE introduction"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite",
-        "A comprehensive toolkit for SIESTA DFT simulations",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        "Developed by Dr. Carlos M. O. Bastos"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.2) # Mantive seu sleep original
-    print("="*60 + "\n")
 
 def show_main_menu() -> None:
     """Displays the main category menu"""
@@ -145,7 +98,6 @@ def get_int_input(prompt: str, default: int = None) -> int:
 # TOOL FUNCTIONS
 # ==========================================================
 
-
 def run_phonon_postprocessing() -> None:
     """Interface for the Phonon Post-Processing (phonons_post.py)"""
     print("\n" + "="*60)
@@ -214,7 +166,6 @@ def run_phonon_postprocessing() -> None:
     
     
 
-
 def run_phonon_generator() -> None:
     """Interface for the Phonon Displacement Generator (phonons_create.py)"""
     print("\n" + "="*60)
@@ -280,7 +231,6 @@ def run_phonon_generator() -> None:
         
     input(color_text("\nPress Enter to continue...", 'green'))
 
-
 def run_cohesive_setup() -> None:
     """Interface for the Cohesive Energy Setup (cohesive_energy.py)"""
     print("\n" + "="*60)
@@ -317,7 +267,6 @@ def run_cohesive_setup() -> None:
     # pode alterar "stb_cohesive" para "python cohesive_energy.py" 
     run_tool("stb-cohesive", args)
 
-
 def run_cohesive_analysis() -> None:
     """Interface for the Cohesive Energy Analysis (cohesive_analysis.py)"""
     print("\n" + "="*60)
@@ -343,7 +292,6 @@ def run_cohesive_analysis() -> None:
         
     # Executa o script. Se não tiver atalho configurado, altere para "python cohesive_analysis.py"
     run_tool("stb-cohesiveAnalysis", args)
-
 
 def run_2d_stacker() -> None:
     """Interface for the Monolayer Stacker (stb.stacking2D:main)"""
@@ -504,8 +452,6 @@ def run_grid_to_cube() -> None:
     
     input(color_text("\nPress Enter to continue...", 'green'))
 
-
-
 def run_density_plotter() -> None:
     """Interface for the Charge Density Plotter (density.py)"""
     print("\n" + "="*60)
@@ -565,7 +511,6 @@ def run_density_plotter() -> None:
     
     input(color_text("\nPress Enter to continue...", 'green'))
 
-
 def run_workfunction_calculator() -> None:
     """Interface for the Work Function Calculator (workfunction.py)"""
     print("\n" + "="*60)
@@ -623,7 +568,6 @@ def run_workfunction_calculator() -> None:
         print(color_text("Ensure 'sisl' is installed (pip install sisl) and files exist.", 'yellow'))
     
     input(color_text("\nPress Enter to continue...", 'green'))
-
 
 def run_bader_calculator() -> None:
     """Interface for the Bader Charge Analysis (bader.py)"""
@@ -1047,7 +991,6 @@ def run_strain_post_processor() -> None:
         print(color_text("\nError executing script.", 'red'))
         input(color_text("\nPress Enter to continue...", 'green'))
 
-
 def run_bands_analyzer() -> None:
     """Interface for the Bands Analyzer (stb-bands)"""
     print("\n" + "="*60)
@@ -1224,7 +1167,6 @@ def run_file_translator() -> None:
     if coord_format_value:
         args.extend(["--coord-format", coord_format_value])
 
-
     if in_format == "xyz":
         print(color_text("\nXYZ format requires a separate lattice file.", 'yellow'))
         # Esta linha agora terá Tab-completion!
@@ -1235,9 +1177,6 @@ def run_file_translator() -> None:
         args.extend(["--lattice", lattice_file])
     
     run_tool("stb-translate", args)
-
-
-
 
 def run_clean_tool() -> None:
     """Interactive interface for the Clean Files tool (stb-clean)"""
@@ -1364,7 +1303,6 @@ PREPARATION_TOOLS = {
         'description': "Automate SIESTA phonon displacement folders using Phonopy.",
         'func': run_phonon_generator}
          }
-
 
 ANALYSIS_TOOLS = {
     1: {'title': "Bands Analyzer (stb-bands)",

@@ -11,70 +11,18 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
 import warnings
 import subprocess
-from time import sleep
 import argparse
 import textwrap
 from typing import List, Dict
 import os
 import argparse
 import numpy as np
-
-
-
-# Cores ANSI para terminal
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Retorna texto formatado com cor ANSI"""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Exibe a introdução estilizada da STB-SUITE"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite",
-        "A comprehensive toolkit for SIESTA DFT simulations",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        "Developed by Dr. Carlos M. O. Bastos"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.2)
-    print("="*60 + "\n")
-    return
-
 
 def determine_strain_type(direction):
     """Determine strain type based on direction input."""
@@ -197,7 +145,6 @@ def main():
     # Generate strained structures
 #    strain_values = [i / 100 for i in range(args.stmin, args.stmax + 1, args.step)]
     strain_values = list(np.arange(args.stmin, args.stmax + args.step, args.step) / 100)
-
 
     for strain in strain_values:
         # Handle negative strain (compression) in folder name

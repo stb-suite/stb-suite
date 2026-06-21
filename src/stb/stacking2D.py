@@ -17,6 +17,7 @@ try:
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
+from stb.cli import COLORS, color_text, show_intro
 
 import os
 import sys
@@ -24,7 +25,6 @@ import warnings
 import argparse
 import textwrap
 import numpy as np
-from time import sleep
 from pymatgen.core import Structure, Lattice
 from pymatgen.core.operations import SymmOp
 from pymatgen.analysis.interfaces.zsl import ZSLGenerator
@@ -32,55 +32,6 @@ from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 # Suppress Pymatgen warnings for cleaner CLI output
 warnings.filterwarnings("ignore")
-
-# ANSI Colors for terminal
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Returns text formatted with ANSI colors"""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Displays the stylized STB-SUITE introduction"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
- """, 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite - Monolayer Stacker",
-        "ZSL Heteroepitaxy Algorithm & Geometric Control",
-        f"Version {VERSION} | University of Brasilia - 2026",
-        "Developed by Dr. Carlos M. O. Bastos"
-    ]
-
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.2)
-    print("="*60 + "\n")
-    return
 
 def parse_fdf_to_pymatgen(filepath):
     """Parses a Siesta .fdf file and returns a Pymatgen Structure object."""

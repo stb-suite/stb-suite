@@ -9,61 +9,16 @@ import sys
 import re
 import argparse
 import textwrap
-from time import sleep
 import numpy as np
 import sisl
 from typing import Tuple
+from stb.cli import COLORS, color_text, show_intro
 
 try:
     from importlib.metadata import version as _pkg_version
     VERSION = _pkg_version("stb_suite")
 except Exception:
     VERSION = "1.9.5"
-COLORS = {
-    'reset': '\033[0m',
-    'cyan': '\033[96m',
-    'blue': '\033[94m',
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'bold': '\033[1m',
-    'underline': '\033[4m'
-}
-
-def color_text(text: str, color: str) -> str:
-    """Format text with ANSI color codes"""
-    return f"{COLORS[color]}{text}{COLORS['reset']}"
-
-def show_intro() -> None:
-    """Display STB-SUITE introduction banner"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    logo = color_text(r"""
-.----------------.  .----------------.  .----------------.
-| .--------------. || .--------------. || .--------------. |
-| |    _______   | || |  _________   | || |   ______     | |
-| |   /  ___  |  | || | |  _   _  |  | || |  |_   _ \    | |
-| |  |  (__ \_|  | || | |_/ | | \_|  | || |    | |_) |   | |
-| |   '.___`-.   | || |     | |      | || |    |  __'.   | |
-| |  |`\____) |  | || |    _| |_     | || |   _| |__) |  | |
-| |  |_______.'  | || |   |_____|    | || |  |_______/   | |
-| |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'
-""", 'cyan')
-
-    description = [
-        "Siesta ToolBox Suite",
-        "SIESTA-to-Wantibexos Hamiltonian Interface",
-        f"Version {VERSION} | University of Brasilia - 2025",
-        ""
-    ]
-    
-    print(logo)
-    print("\n" + "="*60)
-    for line in description:
-        print(line.center(60))
-        sleep(0.1)
-    print("="*60 + "\n")
 
 def parse_arguments() -> argparse.Namespace:
     """Handle command-line arguments with argparse"""
@@ -137,12 +92,9 @@ def spin_mapping(spin_obj) -> Tuple[str, int]:
             return mapping[key]
     raise ValueError(f"Unsupported spin type in: '{spin_str}'")
 
-
-
 def format_float(value: float) -> str:
     """Format floating point numbers for TB files"""
     return f"{value:12.6f}"
-
 
 def write_basis(hamiltonian, spin_suffix: str, spin_factor: int) -> None:
     """Write basis set information to file"""
@@ -317,8 +269,6 @@ def write_hamiltonian(hamiltonian, spin_suffix: str, fermi: float) -> None:
                                 f"{format_float(imH[icell,i,j])} "
                                 f"{format_float(S[icell,i,j])}\n")
                         f.write(line)
-
-
 
 def main():
     """Main workflow controller"""
