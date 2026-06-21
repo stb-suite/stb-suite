@@ -20,15 +20,6 @@ import os
 import argparse
 from stb.cli import COLORS, color_text, show_intro
 
-# --- Color Class for UI ---
-class Cores:
-    """Class to store ANSI color codes for the terminal."""
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    CYAN = '\033[96m'
 # --- End of Color Class ---
 
 def parse_fdf_to_structure(fdf_file="struct.fdf"):
@@ -43,7 +34,7 @@ def parse_fdf_to_structure(fdf_file="struct.fdf"):
         with open(fdf_file, 'r') as f:
             lines = f.readlines()
     except FileNotFoundError:
-        print(f"{Cores.RED}Error: File '{fdf_file}' not found.{Cores.RESET}")
+        print(f"{COLORS['red']}Error: File '{fdf_file}' not found.{COLORS['reset']}")
         return None
 
     # Variables to store the data
@@ -123,11 +114,11 @@ def parse_fdf_to_structure(fdf_file="struct.fdf"):
                 if species_name:
                     atom_species_names.append(species_name)
                 else:
-                    print(f"{Cores.RED}Error: Species index '{species_index}' not found in the map.{Cores.RESET}")
+                    print(f"{COLORS['red']}Error: Species index '{species_index}' not found in the map.{COLORS['reset']}")
                     return None
                     
         except (ValueError, IndexError) as e:
-            print(f"{Cores.YELLOW}Warning: Skipping malformed line in FDF: {line} ({e}){Cores.RESET}")
+            print(f"{COLORS['yellow']}Warning: Skipping malformed line in FDF: {line} ({e}){COLORS['reset']}")
             continue
 
     # Check if the coordinate format is as expected
@@ -135,14 +126,14 @@ def parse_fdf_to_structure(fdf_file="struct.fdf"):
 
     # Create the Lattice object (assuming vectors are in Angstrom)
     if not lattice_vectors:
-        print(f"{Cores.RED}Error: No lattice vectors found in file.{Cores.RESET}")
+        print(f"{COLORS['red']}Error: No lattice vectors found in file.{COLORS['reset']}")
         return None
         
     lattice = Lattice(lattice_vectors)
     
     # Create the Structure object
     if not atom_species_names or not atom_coords:
-        print(f"{Cores.RED}Error: No atoms found in file.{Cores.RESET}")
+        print(f"{COLORS['red']}Error: No atoms found in file.{COLORS['reset']}")
         return None
         
     structure = Structure(lattice, atom_species_names, atom_coords, coords_are_cartesian=is_cartesian)
@@ -158,7 +149,7 @@ def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_f
     
     # 1. Determine the full sequence of k-points in order
     if not path_segments:
-        print(f"  {Cores.YELLOW}Warning: No k-path segments found. File will not be written.{Cores.RESET}")
+        print(f"  {COLORS['yellow']}Warning: No k-path segments found. File will not be written.{COLORS['reset']}")
         return
         
     # --- START OF CORRECTION ---
@@ -185,18 +176,18 @@ def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_f
                 path_sequence.extend(segment_list[1:])
             else:
                 # The path is disjoint (it's a "jump", e.g., ends in H_1, starts in M)
-                print(f"  {Cores.CYAN}Note: Disjointed path detected (jump from {last_point_in_sequence} to {first_point_of_new_segment}). Including full segment.{Cores.RESET}")
+                print(f"  {COLORS['cyan']}Note: Disjointed path detected (jump from {last_point_in_sequence} to {first_point_of_new_segment}). Including full segment.{COLORS['reset']}")
                 # Add ALL points from the new segment
                 path_sequence.extend(segment_list)
     
     
     if not path_sequence:
-        print(f"  {Cores.RED}Error: Could not determine path sequence.{Cores.RESET}")
+        print(f"  {COLORS['red']}Error: Could not determine path sequence.{COLORS['reset']}")
         return
         
     # This line will now print the full path, including jumps
     path_str_display = '-'.join([r'\Gamma' if p == 'GAMMA' else p for p in path_sequence])
-    print(f"  {Cores.CYAN}SIESTA Path to be written:{Cores.RESET} {path_str_display}")
+    print(f"  {COLORS['cyan']}SIESTA Path to be written:{COLORS['reset']} {path_str_display}")
 
     try:
         with open(output_filename, 'w') as f:
@@ -223,7 +214,7 @@ def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_f
                 
             f.write("%endblock BandLines\n")
         
-        print(f"  {Cores.GREEN}Success:{Cores.RESET} SIESTA file '{Cores.BOLD}{output_filename}{Cores.RESET}' has been created.")
+        print(f"  {COLORS['green']}Success:{COLORS['reset']} SIESTA file '{COLORS['bold']}{output_filename}{COLORS['reset']}' has been created.")
     
     except KeyError as e:
         # This error happens if a label in the path (ex: '\Gamma') has a 
@@ -231,17 +222,17 @@ def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_f
         
         # Tries to substitute '\Gamma' with 'GAMMA' if 'GAMMA' exists
         if str(e) == r"'\Gamma'" and 'GAMMA' in kpoints_dict:
-            print(f"  {Cores.YELLOW}Warning: Found '\\Gamma' label, attempting to use 'GAMMA' internally.{Cores.RESET}")
+            print(f"  {COLORS['yellow']}Warning: Found '\\Gamma' label, attempting to use 'GAMMA' internally.{COLORS['reset']}")
             # Recreate the sequence, substituting \Gamma with GAMMA
             path_sequence_fixed = ['GAMMA' if label == r'\Gamma' else label for label in path_sequence]
             # Try to write the file AGAIN
             write_siesta_kpath_file_fixed(kpoints_dict, path_sequence_fixed, num_points, output_filename)
         else:
-             print(f"  {Cores.RED}Error writing file: K-point label {e} found in path but not in k-points list.{Cores.RESET}")
-             print(f"  {Cores.RED}Available labels: {list(kpoints_dict.keys())}{Cores.RESET}")
+             print(f"  {COLORS['red']}Error writing file: K-point label {e} found in path but not in k-points list.{COLORS['reset']}")
+             print(f"  {COLORS['red']}Available labels: {list(kpoints_dict.keys())}{COLORS['reset']}")
 
     except Exception as e:
-        print(f"  {Cores.RED}Error writing {output_filename}: {e}{Cores.RESET}")
+        print(f"  {COLORS['red']}Error writing {output_filename}: {e}{COLORS['reset']}")
 
 # --- HELPER FUNCTION TO FIX LABEL NAMES ---
 def write_siesta_kpath_file_fixed(kpoints_dict, path_sequence, num_points, output_filename):
@@ -249,7 +240,7 @@ def write_siesta_kpath_file_fixed(kpoints_dict, path_sequence, num_points, outpu
     Emergency "helper" function to write the file if the KeyError
     for '\Gamma' vs 'GAMMA' occurs.
     """
-    print(f"  {Cores.CYAN}Retrying file write with 'GAMMA' label...{Cores.RESET}")
+    print(f"  {COLORS['cyan']}Retrying file write with 'GAMMA' label...{COLORS['reset']}")
     try:
         with open(output_filename, 'w') as f:
             f.write("### BANDS\n")
@@ -270,9 +261,9 @@ def write_siesta_kpath_file_fixed(kpoints_dict, path_sequence, num_points, outpu
                 
             f.write("%endblock BandLines\n")
         
-        print(f"  {Cores.GREEN}Success:{Cores.RESET} SIESTA file '{Cores.BOLD}{output_filename}{Cores.RESET}' has been created (with label fix).")
+        print(f"  {COLORS['green']}Success:{COLORS['reset']} SIESTA file '{COLORS['bold']}{output_filename}{COLORS['reset']}' has been created (with label fix).")
     except Exception as e:
-        print(f"  {Cores.RED}Error during retry: {e}{Cores.RESET}")
+        print(f"  {COLORS['red']}Error during retry: {e}{COLORS['reset']}")
 
 def write_vasp_kpoints_file(kpoints_dict, path_segments, num_points=50, output_filename="KPOINTS"):
     """
@@ -289,13 +280,13 @@ def write_vasp_kpoints_file(kpoints_dict, path_segments, num_points=50, output_f
     # We replace '\Gamma' with 'GAMMA' everywhere to be consistent.
     if r'\Gamma' in kpoints_dict and 'GAMMA' not in kpoints_dict:
         kpoints_dict_fixed['GAMMA'] = kpoints_dict_fixed.pop(r'\Gamma')
-        print(f"  {Cores.CYAN}Note: Standardizing '\\Gamma' to 'GAMMA' internally.{Cores.RESET}")
+        print(f"  {COLORS['cyan']}Note: Standardizing '\\Gamma' to 'GAMMA' internally.{COLORS['reset']}")
     elif r'\Gamma' not in kpoints_dict and 'GAMMA' in kpoints_dict:
          pass # Already in 'GAMMA' format
     elif r'\Gamma' in kpoints_dict and 'GAMMA' in kpoints_dict:
          # This case is ambiguous, but we'll prefer GAMMA
          kpoints_dict_fixed.pop(r'\Gamma', None)
-         print(f"  {Cores.YELLOW}Warning: Both '\\Gamma' and 'GAMMA' found, using 'GAMMA'.{Cores.RESET}")
+         print(f"  {COLORS['yellow']}Warning: Both '\\Gamma' and 'GAMMA' found, using 'GAMMA'.{COLORS['reset']}")
 
     # Fix the path segments to use 'GAMMA'
     path_segments_fixed = []
@@ -320,7 +311,7 @@ def write_vasp_kpoints_file(kpoints_dict, path_segments, num_points=50, output_f
                     # Fix 'GAMMA' to '\Gamma' for display
                     label_from = r'\Gamma' if path_segments_fixed[i-1][-1] == 'GAMMA' else path_segments_fixed[i-1][-1]
                     label_to = r'\Gamma' if segment_list[0] == 'GAMMA' else segment_list[0]
-                    print(f"  {Cores.CYAN}Note: Disjointed path detected (jump from {label_from} to {label_to}).{Cores.RESET}")
+                    print(f"  {COLORS['cyan']}Note: Disjointed path detected (jump from {label_from} to {label_to}).{COLORS['reset']}")
 
                 # Write all segments in the current continuous path
                 # (e.g., A-B, then B-C)
@@ -344,13 +335,13 @@ def write_vasp_kpoints_file(kpoints_dict, path_segments, num_points=50, output_f
                     # from the next (e.g., B-C)
                     f.write("\n")
 
-        print(f"  {Cores.GREEN}Success:{Cores.RESET} VASP file '{Cores.BOLD}{output_filename}{Cores.RESET}' has been created.")
+        print(f"  {COLORS['green']}Success:{COLORS['reset']} VASP file '{COLORS['bold']}{output_filename}{COLORS['reset']}' has been created.")
 
     except KeyError as e:
-         print(f"  {Cores.RED}Error writing file: K-point label {e} found in path but not in k-points list.{Cores.RESET}")
-         print(f"  {Cores.RED}Available labels: {list(kpoints_dict_fixed.keys())}{Cores.RESET}")
+         print(f"  {COLORS['red']}Error writing file: K-point label {e} found in path but not in k-points list.{COLORS['reset']}")
+         print(f"  {COLORS['red']}Available labels: {list(kpoints_dict_fixed.keys())}{COLORS['reset']}")
     except Exception as e:
-        print(f"  {Cores.RED}Error writing {output_filename}: {e}{Cores.RESET}")
+        print(f"  {COLORS['red']}Error writing {output_filename}: {e}{COLORS['reset']}")
 
 def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, write_kpoints_file=False): 
     """
@@ -374,22 +365,22 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
         bravais_lattice = analyzer.get_lattice_type()
 
         # --- IMPROVED OUTPUT ---
-        print(f"{Cores.BOLD}--- 1. Structure Analysis ---{Cores.RESET}")
-        print(f"  {Cores.CYAN}Formula:{Cores.RESET} {structure.composition.reduced_formula}")
-        print(f"  {Cores.CYAN}Space Group:{Cores.RESET} {Cores.BOLD}{space_group_symbol} (No. {space_group_number}){Cores.RESET}")
-        print(f"  {Cores.CYAN}Bravais Lattice:{Cores.RESET} {bravais_lattice}")
-        print(f"  {Cores.YELLOW}Using precision (symprec):{Cores.RESET} {symprec}")
+        print(f"{COLORS['bold']}--- 1. Structure Analysis ---{COLORS['reset']}")
+        print(f"  {COLORS['cyan']}Formula:{COLORS['reset']} {structure.composition.reduced_formula}")
+        print(f"  {COLORS['cyan']}Space Group:{COLORS['reset']} {COLORS['bold']}{space_group_symbol} (No. {space_group_number}){COLORS['reset']}")
+        print(f"  {COLORS['cyan']}Bravais Lattice:{COLORS['reset']} {bravais_lattice}")
+        print(f"  {COLORS['yellow']}Using precision (symprec):{COLORS['reset']} {symprec}")
 
-        print(f"\n{Cores.BOLD}--- 2. High-Symmetry K-Points (Fractional Coordinates) ---{Cores.RESET}")
+        print(f"\n{COLORS['bold']}--- 2. High-Symmetry K-Points (Fractional Coordinates) ---{COLORS['reset']}")
         kpoints = kpath.kpath['kpoints']
         for label, coords in kpoints.items():
             # Format coordinates
             coord_str = ", ".join([f"{c:8.5f}" for c in coords])
             # Fix 'GAMMA' to '\Gamma' for display
             display_label = r'\Gamma' if label == 'GAMMA' else label
-            print(f"  {Cores.GREEN}{display_label:<5}:{Cores.RESET} ({coord_str})")
+            print(f"  {COLORS['green']}{display_label:<5}:{COLORS['reset']} ({coord_str})")
 
-        print(f"\n{Cores.BOLD}--- 3. Suggested K-Path ---{Cores.RESET}")
+        print(f"\n{COLORS['bold']}--- 3. Suggested K-Path ---{COLORS['reset']}")
         path = kpath.kpath['path']
         path_segments_str_list = []
         
@@ -400,13 +391,13 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
             display_segment = [r'\Gamma' if label == 'GAMMA' else label for label in segment_list]
             path_segments_str_list.append("-".join(display_segment))
         
-        print(f"  Path: {Cores.GREEN}{Cores.BOLD}{' | '.join(path_segments_str_list)}{Cores.RESET}")
+        print(f"  Path: {COLORS['green']}{COLORS['bold']}{' | '.join(path_segments_str_list)}{COLORS['reset']}")
         
         # --- ADDED REFERENCE ---
-        print(f"\n{Cores.CYAN}Methodology:{Cores.RESET}")
+        print(f"\n{COLORS['cyan']}Methodology:{COLORS['reset']}")
         print(f"  The path follows the Setyawan & Curtarolo (2010) convention,")
         print(f"  as implemented by the Pymatgen library.")
-        print(f"  {Cores.YELLOW}Reference:{Cores.RESET}")
+        print(f"  {COLORS['yellow']}Reference:{COLORS['reset']}")
         print(f"    Setyawan, W., & Curtarolo, S. (2010).")
         print(f"    High-throughput electronic band structure calculations: Challenges and tools.")
         print(f"    Computational Materials Science, 49(2), 299-312.")
@@ -415,7 +406,7 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
         num_points_per_segment = 50 
         
         # --- FILE GENERATION ---
-        print(f"\n{Cores.BOLD}--- 4. Output File Generation ---{Cores.RESET}")
+        print(f"\n{COLORS['bold']}--- 4. Output File Generation ---{COLORS['reset']}")
         
         # Write the SIESTA k-path file if requested
         if write_fdf_file:
@@ -436,15 +427,15 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
             )
 
     except Exception as e:
-        print(f"\n{Cores.RED}An error occurred while analyzing the structure: {e}{Cores.RESET}")
-        print(f"{Cores.YELLOW}It might be necessary to adjust the 'symprec' parameter (current: {symprec}).{Cores.RESET}")
-        print(f"{Cores.YELLOW}This often happens if the input structure is distorted or the FDF/POSCAR parse failed.{Cores.RESET}")
+        print(f"\n{COLORS['red']}An error occurred while analyzing the structure: {e}{COLORS['reset']}")
+        print(f"{COLORS['yellow']}It might be necessary to adjust the 'symprec' parameter (current: {symprec}).{COLORS['reset']}")
+        print(f"{COLORS['yellow']}This often happens if the input structure is distorted or the FDF/POSCAR parse failed.{COLORS['reset']}")
 
 def main():
     
     # 1. Configure ArgParse
     parser = argparse.ArgumentParser(
-        description=f"""{Cores.BOLD}Finds the high-symmetry k-path for FDF (SIESTA) or POSCAR (VASP) files.{Cores.RESET}
+        description=f"""{COLORS['bold']}Finds the high-symmetry k-path for FDF (SIESTA) or POSCAR (VASP) files.{COLORS['reset']}
 Uses the Setyawan & Curtarolo (2010) methodology via Pymatgen.""",
         formatter_class=argparse.RawTextHelpFormatter 
     )
@@ -502,23 +493,23 @@ Uses the Setyawan & Curtarolo (2010) methodology via Pymatgen.""",
     
     # Check if the file exists
     if not os.path.exists(filename):
-        print(f"{Cores.RED}Error: File '{filename}' not found.{Cores.RESET}")
+        print(f"{COLORS['red']}Error: File '{filename}' not found.{COLORS['reset']}")
         sys.exit(1) 
 
     # Try to guess the type if not provided
     if file_type is None:
-        print(f"{Cores.YELLOW}File type not specified, trying to guess...{Cores.RESET}")
+        print(f"{COLORS['yellow']}File type not specified, trying to guess...{COLORS['reset']}")
         if filename.lower().endswith('.fdf'):
             file_type = 'fdf'
         # Common VASP filenames
         elif 'poscar' in filename.lower() or 'contcar' in filename.lower() or filename.lower().endswith('.vasp'):
             file_type = 'poscar'
         else:
-            print(f"{Cores.RED}Error: Could not guess file type for '{filename}'.{Cores.RESET}")
+            print(f"{COLORS['red']}Error: Could not guess file type for '{filename}'.{COLORS['reset']}")
             print(f"Please use the -t 'fdf' or -t 'poscar' option.")
             sys.exit(1)
             
-    print(f"{Cores.CYAN}Reading file: {filename} (Type: {file_type}){Cores.RESET}\n")
+    print(f"{COLORS['cyan']}Reading file: {filename} (Type: {file_type}){COLORS['reset']}\n")
     
     # 3. Load the Structure object
     
@@ -534,7 +525,7 @@ Uses the Setyawan & Curtarolo (2010) methodology via Pymatgen.""",
             structure_obj = Structure.from_file(filename)
             
     except Exception as e:
-        print(f"{Cores.RED}An error occurred while READING the file '{filename}':{Cores.RESET}")
+        print(f"{COLORS['red']}An error occurred while READING the file '{filename}':{COLORS['reset']}")
         print(f"{e}")
         sys.exit(1)
         
@@ -555,7 +546,7 @@ Uses the Setyawan & Curtarolo (2010) methodology via Pymatgen.""",
         )
         
     else:
-        print(f"{Cores.RED}Error: Could not create the structure object from the file.{Cores.RESET}")
+        print(f"{COLORS['red']}Error: Could not create the structure object from the file.{COLORS['reset']}")
         
 if __name__ == "__main__":
     main()
