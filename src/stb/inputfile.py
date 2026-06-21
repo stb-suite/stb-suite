@@ -928,7 +928,7 @@ def compute_monkhorts(cella, cellb, cellc, k_density):
 
 def _section(title: str) -> None:
     """Print a styled section separator."""
-    bar = color_text("─" * 60, 'blue')
+    bar = color_text("─" * 60, 'white')
     print(f"\n{bar}")
     print(color_text(f"  {title}", 'bold'))
     print(bar)
@@ -984,7 +984,7 @@ def generate_calculation(struct_file, chosen_mode, pp_path):
     output_file = "calc.fdf"
 
     # ── Header ────────────────────────────────────────────────────
-    bar = color_text("═" * 60, 'blue')
+    bar = color_text("═" * 60, 'white')
     print(f"\n{bar}")
     print(color_text("  SIESTA Input File Generator", 'bold'))
     print(bar)
@@ -1073,9 +1073,9 @@ def generate_calculation(struct_file, chosen_mode, pp_path):
 
         # ── Footer ─────────────────────────────────────────────────
         print()
-        print(color_text("═" * 60, 'blue'))
+        print(color_text("═" * 60, 'white'))
         print(color_text("  Done. Edit calc.fdf to adjust calculation parameters.", 'bold'))
-        print(color_text("═" * 60, 'blue') + "\n")
+        print(color_text("═" * 60, 'white') + "\n")
 
     except Exception as e:
         print()
