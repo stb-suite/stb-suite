@@ -14,7 +14,11 @@ import numpy as np
 import sisl
 from typing import Tuple
 
-VERSION = "1.9.5"
+try:
+    from importlib.metadata import version as _pkg_version
+    VERSION = _pkg_version("stb_suite")
+except Exception:
+    VERSION = "1.9.5"
 COLORS = {
     'reset': '\033[0m',
     'cyan': '\033[96m',

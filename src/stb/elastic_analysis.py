@@ -6,7 +6,11 @@
 #     Integrated Style Refactoring              #
 #################################################
 
-VERSION = "1.9.5" # Atualizado versão para refletir a mudança
+try:
+    from importlib.metadata import version as _pkg_version
+    VERSION = _pkg_version("stb_suite")
+except Exception:
+    VERSION = "1.9.5" # Atualizado versão para refletir a mudança
 
 import os
 import sys

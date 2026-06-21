@@ -7,7 +7,11 @@
 #      bastoscmo.github.io                      #
 #################################################
 
-VERSION = "1.9.5"
+try:
+    from importlib.metadata import version as _pkg_version
+    VERSION = _pkg_version("stb_suite")
+except Exception:
+    VERSION = "1.9.5"
 
 import os
 import sys

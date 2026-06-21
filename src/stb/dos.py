@@ -9,7 +9,11 @@
 #  to include (l,m) orbital projection support    #
 #################################################
 
-VERSION = "1.9.5" # Updated version
+try:
+    from importlib.metadata import version as _pkg_version
+    VERSION = _pkg_version("stb_suite")
+except Exception:
+    VERSION = "1.9.5"
 
 import xml.etree.ElementTree as ET
 import numpy as np
