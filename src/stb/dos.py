@@ -5,9 +5,6 @@
 # Developed by Dr. Carlos M. O. Bastos          #
 #      bastoscmo.github.io                      #
 #################################################
-#  Modified by "Parceiro de Programacao" (Gemini) #
-#  to include (l,m) orbital projection support    #
-#################################################
 
 try:
     from importlib.metadata import version as _pkg_version
@@ -23,7 +20,6 @@ import pandas as pd
 import argparse
 import sys
 
-# --- NEW: Map for (l,m) detailed projections ---
 # This defines the standard SIESTA order for real spherical harmonics
 ORBITAL_MAP = {
     0: {0: 's'},
@@ -32,7 +28,6 @@ ORBITAL_MAP = {
     3: {-3: 'f-3', -2: 'f-2', -1: 'f-1', 0: 'f0', 1: 'f1', 2: 'f2', 3: 'f3'} # Using simple f names
 }
 
-# --- NEW: Sort order for output columns ---
 ORBITAL_ORDER = [
     's', 
     'py', 'pz', 'px',
@@ -61,14 +56,12 @@ def get_orbital_name(l_val):
     l_map = {0: 's', 1: 'p', 2: 'd', 3: 'f'}
     return l_map.get(l_val, None) # Return None if not s,p,d,f
 
-# --- NEW: Function to get detailed (l,m) orbital names ---
 def get_detailed_orbital_name(l_val, m_val):
     """Maps (l, m) to orbital name (s, px, py, pz, dxy, ...)."""
     if l_val in ORBITAL_MAP:
         return ORBITAL_MAP[l_val].get(m_val, None) # Return None if m is invalid
     return None # Return None if l is invalid
 
-# --- MODIFIED: Added 'projection_mode' argument ---
 def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
     """
     Main function to parse the PDOS.xml file and generate output files.
@@ -129,7 +122,6 @@ def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
         all_species = set()
         processed_atoms_count = 0
         
-        # --- MODIFIED: This loop is updated for dynamic orbital handling ---
         for orbital in all_orbital_tags:
             try:
                 atom_index = int(orbital.attrib.get('atom_index', -1))
@@ -141,7 +133,6 @@ def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
                     print(f"Warning: Orbital found with no 'atom_index' attribute. Skipping.", file=sys.stderr)
                     continue
                 
-                # --- MODIFIED: Choose orbital name based on projection mode ---
                 orbital_name = None
                 if projection_mode == 'l':
                     orbital_name = get_orbital_name(l_val)
@@ -152,7 +143,6 @@ def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
                 if orbital_name is None:
                     continue
 
-                # --- MODIFIED: Initialize atom data dynamically ---
                 if atom_index not in atom_data:
                     atom_data[atom_index] = {'species': atom_species}
                     all_species.add(atom_species)
@@ -166,7 +156,6 @@ def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
                 orbital_pdos_data = parse_data_string(data_text)
                 
                 if len(orbital_pdos_data) == num_energy_points:
-                    # --- MODIFIED: Initialize orbital array if not present ---
                     if orbital_name not in atom_data[atom_index]:
                         atom_data[atom_index][orbital_name] = np.zeros(num_energy_points)
                         
@@ -187,7 +176,6 @@ def process_pdos_xml(input_file, dos_types, shift_str, projection_mode):
 
         # --- 5. Prepare and Write Output Data ---
         
-        # --- MODIFIED: Output headers and columns are now DYNAMIC ---
         
         # 5a. Find all unique orbital columns that were processed
         all_orbital_names = set()
@@ -336,7 +324,6 @@ def main():
              "  '-1.23': Apply a manual shift of -1.23 eV."
     )
 
-    # --- NEW: Added --projection argument ---
     parser.add_argument(
         "--projection",
         type=str,
@@ -359,7 +346,6 @@ def main():
     print("\n" + color_text("Density of States:", 'bold'))
     print("-"*60)
     
-    # --- MODIFIED: Pass args.projection to the processing function ---
     process_pdos_xml(args.filename, args.type, args.shift, args.projection)
     
 if __name__ == "__main__":

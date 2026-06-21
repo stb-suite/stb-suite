@@ -65,8 +65,7 @@ def run_tool(tool_name: str, args: List[str]) -> None:
 
 def get_input(prompt: str, color: str = 'green') -> str:
     """
-    Gets user input with a colored prompt.
-    Graças ao 'import readline', esta função agora suporta Tab-completion!
+    Gets user input with a colored prompt. Supports tab-completion via readline.
     """
     return input(color_text(prompt, color))
 
@@ -74,7 +73,6 @@ def get_float_input(prompt: str, default: float = None) -> float:
     """Gets a float number from the user"""
     while True:
         try:
-            # get_input() já tem o tab-completion
             value_str = get_input(prompt)
             if value_str == "" and default is not None:
                 return default
@@ -86,7 +84,6 @@ def get_int_input(prompt: str, default: int = None) -> int:
     """Gets an integer number from the user"""
     while True:
         try:
-            # get_input() já tem o tab-completion
             value_str = get_input(prompt)
             if value_str == "" and default is not None:
                 return default
@@ -104,7 +101,7 @@ def run_phonon_postprocessing() -> None:
     print(color_text("PHONON POST-PROCESSING", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Diretório
+    # 1. Directory
     phonon_dir = get_input("Phonon runs directory [default: phonon_runs]: ").strip()
     if not phonon_dir:
         phonon_dir = "phonon_runs"
@@ -172,17 +169,17 @@ def run_phonon_generator() -> None:
     print(color_text("PHONON DISPLACEMENT GENERATOR", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter arquivo de estrutura
+    # 1. Get structure file
     structure_file = get_input("Input structure file [default: structure.fdf]: ").strip()
     if not structure_file:
         structure_file = "structure.fdf"
         
-    # 2. Obter arquivo de cálculo
+    # 2. Get calculation file
     calc_file = get_input("Calculation parameters file [default: calc.fdf]: ").strip()
     if not calc_file:
         calc_file = "calc.fdf"
         
-    # 3. Definir dimensões da supercélula (entrada única separada por espaços)
+    # 3. Supercell dimensions (space-separated)
     dim_input = get_input("\nSupercell dimensions (e.g. '2 2 2') [default: 2 2 2]: ").strip()
     
     if not dim_input:
@@ -199,15 +196,15 @@ def run_phonon_generator() -> None:
             print(color_text("Invalid input format. Using default 2 2 2.", 'yellow'))
             dim_x, dim_y, dim_z = 2, 2, 2
     
-    # 4. Definir distância de deslocamento
+    # 4. Displacement distance
     distance = get_float_input("\nDisplacement distance in Å [default: 0.01]: ", 0.01)
     
-    # 5. Diretório dos pseudopotenciais
+    # 5. Pseudopotentials directory
     pseudo_dir = get_input("\nPseudopotentials directory [default: .]: ").strip()
     if not pseudo_dir:
         pseudo_dir = "."
         
-    # 6. Preparar e executar o script
+    # 6. Prepare and run the script
     suite_dir = os.path.dirname(os.path.realpath(__file__))
     script_path = os.path.join(suite_dir, "phonons_create.py")
     
@@ -237,16 +234,16 @@ def run_cohesive_setup() -> None:
     print(color_text("COHESIVE ENERGY SETUP", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter arquivo de estrutura
+    # 1. Get structure file
     struct_file = get_input("Input structure FDF file (-s): ").strip()
     while not os.path.isfile(struct_file):
         print(color_text("File not found!", 'red'))
         struct_file = get_input("Input structure FDF file (-s): ").strip()
         
-    # 2. Obter densidade K
+    # 2. Get K-point density
     k_density = get_float_input("K-point density (default: 0.2): ", 0.2)
     
-    # 3. Obter caminho do PP
+    # 3. Get pseudopotentials path
     pp_path = get_input("Pseudopotentials folder path (-p) [optional, press Enter to skip]: ").strip()
     
     # 4. Spin polarization
@@ -263,8 +260,6 @@ def run_cohesive_setup() -> None:
     if spin_choice in ['y', 'yes']:
         args.append("--spin")
         
-    # Executa o script. Se não tiver os atalhos globais configurados,
-    # pode alterar "stb_cohesive" para "python cohesive_energy.py" 
     run_tool("stb-cohesive", args)
 
 def run_cohesive_analysis() -> None:
@@ -273,13 +268,13 @@ def run_cohesive_analysis() -> None:
     print(color_text("COHESIVE ENERGY ANALYSIS", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter nome do ficheiro de output
+    # 1. Get output filename
     out_file = get_input("SIESTA output file name (e.g., calc.out) [-o]: ").strip()
     while not out_file:
         print(color_text("File name cannot be empty!", 'red'))
         out_file = get_input("SIESTA output file name [-o]: ").strip()
         
-    # 2. Obter o diretório alvo
+    # 2. Get target directory
     dir_path = get_input("Path to results folder containing 'structure' and 'atoms' (default: current dir) [-d]: ").strip()
     
     args = [
@@ -290,7 +285,6 @@ def run_cohesive_analysis() -> None:
     if dir_path:
         args.extend(["-d", dir_path])
         
-    # Executa o script. Se não tiver atalho configurado, altere para "python cohesive_analysis.py"
     run_tool("stb-cohesiveAnalysis", args)
 
 def run_2d_stacker() -> None:
@@ -328,7 +322,7 @@ def run_2d_stacker() -> None:
     elif gap_choice == '3':
         g_start = get_float_input("Start Gap in Å: ", 3.0)
         g_end = get_float_input("End Gap in Å: ", 4.0)
-        # O script nativo usa np.linspace, logo precisa do número total de pontos (steps)
+        # np.linspace requires total number of points
         g_pts = int(get_float_input("Number of points/steps (e.g., 11): ", 11))
         gap_args = ["--gap_range", str(g_start), str(g_end), str(g_pts)]
     else:
@@ -399,7 +393,6 @@ def run_2d_stacker() -> None:
     print(color_text(f"\n--- Running 2D Stacker ---", 'green'))
     
     try:
-        # A chamada é feita uma única vez. O stacking2D.py lida com o resto.
         subprocess.check_call(args)
     except subprocess.CalledProcessError:
         print(color_text(f"\nError executing 2Dstacking script.", 'red'))
@@ -414,13 +407,13 @@ def run_grid_to_cube() -> None:
     print(color_text("SIESTA GRID TO CUBE CONVERTER", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter o SystemLabel
+    # 1. Get SystemLabel
     label = get_input("Enter the Siesta SystemLabel (e.g., siesta): ").strip()
     while not label:
         print(color_text("Label cannot be empty!", 'red'))
         label = get_input("Enter the Siesta SystemLabel: ")
 
-    # 2. Escolher o Tipo de Ficheiro
+    # 2. Select grid type
     print(f"\n{color_text('Select Grid Type to Convert:', 'yellow')}")
     print(f"  {color_text('1', 'cyan')} = RHO (Charge Density)")
     print(f"  {color_text('2', 'cyan')} = VT  (Total Potential)")
@@ -434,7 +427,7 @@ def run_grid_to_cube() -> None:
     
     print(f"\nTarget File: {color_text(f'{label}.{selected_type}', 'cyan')}")
 
-    # 3. Execução
+    # 3. Run conversion
     script_path = os.path.join(os.path.dirname(__file__), "cube.py")
     if not os.path.exists(script_path):
         script_path = "cube.py" # Fallback
@@ -458,14 +451,14 @@ def run_density_plotter() -> None:
     print(color_text("CHARGE DENSITY PLOTTER (RHO)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter o SystemLabel
+    # 1. Get SystemLabel
     print(f"This tool reads the {color_text('.RHO', 'yellow')} file generated by Siesta.")
     label = get_input("Enter the Siesta SystemLabel (e.g., siesta): ").strip()
     while not label:
         print(color_text("Label cannot be empty!", 'red'))
         label = get_input("Enter the Siesta SystemLabel: ")
 
-    # 2. Escolher Modo (2D ou 3D)
+    # 2. Select mode (2D or 3D)
     print(f"\n{color_text('Plot Mode:', 'yellow')}")
     print(f"  {color_text('1', 'cyan')} = 2D Slice (Planar Cut)")
     print(f"  {color_text('2', 'cyan')} = 3D Volume (Point Cloud)")
@@ -478,7 +471,7 @@ def run_density_plotter() -> None:
 
     args = [sys.executable, script_path, "--label", label, "--no-intro"]
 
-    # Lógica para 3D vs 2D
+    # 3D vs 2D mode logic
     if mode_choice == '2':
         # Modo 3D
         args.append("--3d")
@@ -496,7 +489,7 @@ def run_density_plotter() -> None:
         if axis not in [0, 1, 2]: axis = 2
         args.extend(["--axis", str(axis)])
 
-        # Escolher Posição (Opcional)
+        # Position (optional)
         pos_str = get_input("Position in Angstrom (Press Enter for center): ").strip()
         if pos_str:
             args.extend(["--pos", pos_str])
@@ -517,7 +510,7 @@ def run_workfunction_calculator() -> None:
     print(color_text("WORK FUNCTION CALCULATOR", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter o SystemLabel
+    # 1. Get SystemLabel
     label = get_input("Enter the Siesta SystemLabel (e.g., siesta): ").strip()
     while not label:
         print(color_text("Label cannot be empty!", 'red'))
@@ -533,7 +526,7 @@ def run_workfunction_calculator() -> None:
     print("Default logic: looks for Fermi energy in {label}.out")
     fermi_file = get_input(f"Output filename (default: {label}.out): ").strip()
     
-    # 4. Eixo de integração
+    # 4. Integration axis
     print(f"\n{color_text('Integration Axis (Planar Average):', 'yellow')}")
     print(f"  {color_text('0', 'cyan')} = x")
     print(f"  {color_text('1', 'cyan')} = y")
@@ -546,7 +539,7 @@ def run_workfunction_calculator() -> None:
     # Construir comando
     script_path = os.path.join(os.path.dirname(__file__), "workfunction.py")
     if not os.path.exists(script_path):
-        # Fallback caso o script não esteja no mesmo diretório
+        # Fallback if script not in same directory
         script_path = "workfunction.py"
 
     # Montar argumentos
@@ -556,7 +549,6 @@ def run_workfunction_calculator() -> None:
         args.extend(["--grid", grid_file])
     
     if fermi_file:
-        # Nota: O workfunction.py usa --fdf para ler o arquivo de saída (Fermi)
         args.extend(["--file", fermi_file]) 
     
     print(color_text("\nRunning Work Function analysis...", 'green'))
@@ -575,22 +567,21 @@ def run_bader_calculator() -> None:
     print(color_text("BADER CHARGE ANALYSIS", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter o SystemLabel
+    # 1. Get SystemLabel
     label = get_input("Enter the Siesta SystemLabel (e.g., siesta): ").strip()
     while not label:
         print(color_text("Label cannot be empty!", 'red'))
         label = get_input("Enter the Siesta SystemLabel: ")
 
-    # 2. Configurações de Arquivos
+    # 2. File settings
     output_file = get_input(f"Output filename (default: {label}_BADER.txt): ").strip()
     
-    # --- NOVO: Pergunta sobre o arquivo de referência (.out) ---
     print(f"\n{color_text('Reference Output File (for Z_val detection):', 'cyan')}")
     print("If your .out file has a different name or path, specify it below.")
     print("Otherwise, leave blank to look for the default file.")
     ref_file = get_input(f"Path to .out file (default: {label}.out): ").strip()
 
-    # 3. Configuração de Velocidade
+    # 3. Speed mode
     print(f"\n{color_text('Select speed mode:', 'yellow')}")
     print(f"  {color_text('1.', 'yellow')} Normal (Precise)")
     print(f"  {color_text('2.', 'yellow')} Fast (Less refined edges)")
@@ -602,14 +593,13 @@ def run_bader_calculator() -> None:
     if not os.path.exists(script_path):
         script_path = "bader.py"
 
-    # Argumentos básicos
+    # Base arguments
     args = [sys.executable, script_path, "--label", label, "--speed", speed_mode, "--no-intro"]
     
     # Argumentos opcionais
     if output_file:
         args.extend(["--output", output_file])
     
-    # --- NOVO: Adiciona a flag --ref se o usuário digitou algo ---
     if ref_file:
         args.extend(["--ref", ref_file])
     
@@ -627,17 +617,17 @@ def run_elastic_generator() -> None:
     print(color_text("ELASTIC CONSTANTS GENERATOR", 'bold').center(60))
     print("="*60 + "\n")
     
-    # 1. Obter ficheiro de estrutura
+    # 1. Get structure file
     input_file = get_input("Input structure file (fdf/poscar): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
         input_file = get_input("Input structure file: ")
     
-    # 2. Obter deformação máxima e passos
+    # 2. Get max strain and steps
     max_strain = get_float_input("\nMax strain % (default: 2.0): ", 2.0)
     steps = get_int_input("Number of steps per direction (default: 4): ", 4)
     
-    # 3. MENU DE DIREÇÕES
+    # 3. Deformation direction menu
     print("\n" + "-"*60)
     print(color_text("SELECT DEFORMATION MODE", 'cyan').center(60))
     print("-"*60)
@@ -659,7 +649,7 @@ def run_elastic_generator() -> None:
         '5': ["xx"]
     }
     
-    # Se a escolha for inválida, assume o padrão (1)
+    # Default to full 3D tensor on invalid choice
     selected_dirs = dirs_map.get(mode, dirs_map['1'])
     print(f"Selected directions: {color_text(str(selected_dirs), 'green')}\n")
     
@@ -678,7 +668,6 @@ def run_elastic_generator() -> None:
         "--dirs" # Adiciona a flag --dirs
     ]
     
-    # Adiciona as direções escolhidas à lista de argumentos
     args.extend(selected_dirs)
     
     try:
@@ -700,7 +689,6 @@ def run_elastic_analyzer() -> None:
         
     args = [sys.executable, script_path]
     
-    # --- NOVO: Solicita o nome do arquivo de output ---
     print(color_text("Enter the Siesta output filename located inside strain folders.", 'yellow'))
     output_filename = get_input("Filename (default: calc.out): ").strip()
     
@@ -733,14 +721,13 @@ def run_input_generator() -> None:
     print(color_text("INPUT FILE GENERATOR (stb-inputfile)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # --- Validação do ficheiro de entrada ---
-    # Esta linha agora terá Tab-completion!
+    # Validate input file
     input_file = get_input("Input structure file (e.g., struct.fdf): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
         input_file = get_input("Input structure file: ")
     
-    # --- PONTO 1: Menu Numérico para o tipo de cálculo ---
+    # Calculation type menu
     mode_list = [
         'total_energy', 'total_energy+d3',
         'relax', 'relax+d3',
@@ -763,7 +750,7 @@ def run_input_generator() -> None:
     calc_type = mode_list[choice - 1]
     print(f"Selected mode: {color_text(calc_type, 'cyan')}") 
 
-    # --- PONTO 2: Validação do caminho do Pseudopotencial ---
+    # Pseudopotential path validation
     
     args = [
         input_file, 
@@ -772,7 +759,6 @@ def run_input_generator() -> None:
     ]
     
     while True:
-        # Esta linha agora terá Tab-completion!
         pp_path_input = get_input("\nPseudopotentials path (optional, press Enter to skip): ")
         
         if not pp_path_input.strip():
@@ -797,7 +783,6 @@ def run_kgrid_generator() -> None:
     print(color_text("K-GRID GENERATOR (stb-kgrid)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input structure file (fdf/poscar/cif/fhi): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -830,7 +815,6 @@ def run_kpath_generator() -> None:
     print(color_text("K-PATH GENERATOR (stb-kpath)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input structure file (fdf/poscar): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -860,7 +844,6 @@ def run_dos_parser() -> None:
     print(color_text("PDOS XML PARSER (stb-dos)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input PDOS.xml file: ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -887,8 +870,7 @@ def run_dos_parser() -> None:
 
     choice = 0
     while not (1 <= choice <= 2):
-        # Usamos get_int_input com default = 1
-        choice = get_int_input(f"\nSelect mode (1-2) [default: 1]: ", 1) 
+        choice = get_int_input(f"\nSelect mode (1-2) [default: 1]: ", 1)
         if not (1 <= choice <= 2):
             print(color_text(f"Invalid choice! Please select 1 or 2.", 'red'))
             
@@ -914,7 +896,6 @@ def run_strain_generator() -> None:
     print(color_text("STRAIN GENERATOR (stb-strain)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input FDF file: ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -954,15 +935,14 @@ def run_strain_post_processor() -> None:
     print("="*60 + "\n")
     print(color_text("This tool analyzes 'strain_*' folders in the current directory.", 'yellow'))
     
-    # Localiza o script strain_analysis.py no mesmo diretório
     script_path = os.path.join(os.path.dirname(__file__), "strain_analysis.py")
     if not os.path.exists(script_path):
-        # Fallback para tentar chamar como comando do sistema caso não esteja na pasta
+        # Fallback to system command if script not found
         script_path = "strain_analysis.py"
         
     args = [sys.executable, script_path]
 
-    # 1. Pergunta qual o nome do ficheiro de output
+    # 1. Get output filename
     print(color_text("Enter the Siesta output filename located inside strain folders.", 'yellow'))
     siesta_out = get_input("Filename (e.g., calc.out): ").strip()
     while not siesta_out:
@@ -970,11 +950,10 @@ def run_strain_post_processor() -> None:
         siesta_out = get_input("Filename (e.g., calc.out): ").strip()
         
     
-    # Adiciona argumentos obrigatórios
     args.extend(["--file", siesta_out, "--no-intro"])
     
      
-    # 3. --- NOVO: Opção 2D ---
+    # 3. 2D mode option
     print(f"\nIs this a {color_text('2D material', 'cyan')}? (Calculates units in N/m)")
     is_2d = get_input("Enable 2D analysis? (y/N): ").lower()
     if is_2d == 'y' or is_2d == 'yes':
@@ -997,7 +976,6 @@ def run_bands_analyzer() -> None:
     print(color_text("BANDS ANALYZER (stb-bands)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input bands file (e.g., siesta.bands): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -1034,13 +1012,11 @@ def run_dos_convolution() -> None:
     print(color_text("DOS PROCESSOR (CONVOLUTION) (stb-convdos)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input DOS file (e.g., dos_total.dat): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
         input_file = get_input("Input DOS file: ")
     
-    # Esta linha agora terá Tab-completion!
     out_file = get_input("Output file (default: dos_filtered.dat): ", 'green') or "dos_filtered.dat"
     size = get_int_input("Gaussian mask size (default: 11): ", 11)
     sigma = get_float_input("Standard deviation (default: 1.0): ", 1.0)
@@ -1061,7 +1037,6 @@ def run_structure_analyzer() -> None:
     print(color_text("STRUCTURE ANALYZER (stb-structural)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input structure file (CIF/POSCAR/SIESTA): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -1090,7 +1065,6 @@ def run_file_translator() -> None:
     print(color_text("FILE TRANSLATOR (stb-translate)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Formatos suportados (o 'cif' foi adicionado à lista de saída)
     input_formats = ['fdf','poscar', 'cif', 'siesta', 'xyz', 'fhi', 'dftb', 'xsf']
     output_formats = ['cif', 'xyz', 'poscar', 'fdf', 'dftb', 'xsf', 'fhi'] # Adicionei 'cif' aqui
     
@@ -1129,14 +1103,13 @@ def run_file_translator() -> None:
     out_format = output_formats[choice_out - 1]
     print(f"Selected output format: {color_text(out_format, 'cyan')}")
 
-    # ##### NOVO BLOCO: Seleção do Formato de Coordenadas #####
     print(f"\n{color_text('Select output coordinate format:', 'yellow')}")
     print(f"  {color_text('1.', 'yellow')} Cartesian (Angstroms)")
     print(f"  {color_text('2.', 'yellow')} Direct (Fractional)")
     print(f"  {color_text('3.', 'yellow')} Default (Use input format or output's default)")
 
     coord_choice = 0
-    # Usamos default=3 para que pressionar Enter selecione a opção "Default"
+    # Default 3 lets Enter select the "Default" option
     while not (1 <= coord_choice <= 3):
         coord_choice = get_int_input(f"\nSelect format (1-3) [default: 3]: ", 3) 
         if not (1 <= coord_choice <= 3):
@@ -1153,9 +1126,7 @@ def run_file_translator() -> None:
     else:
         # coord_format_value permanece None
         print(f"Selected coordinate format: {color_text('Default', 'cyan')}")
-    # ##### FIM DO NOVO BLOCO #####
 
-    # Construção dos argumentos base
     args = [
         "--in-format", in_format,
         "--in-file", input_file,
@@ -1169,7 +1140,6 @@ def run_file_translator() -> None:
 
     if in_format == "xyz":
         print(color_text("\nXYZ format requires a separate lattice file.", 'yellow'))
-        # Esta linha agora terá Tab-completion!
         lattice_file = get_input("Lattice vectors file (required for XYZ): ")
         while not os.path.isfile(lattice_file):
             print(color_text("File not found!", 'red'))
@@ -1184,7 +1154,6 @@ def run_clean_tool() -> None:
     print(color_text("CLEAN FILES TOOL (stb-clean)", 'bold').center(60))
     print("="*60 + "\n")
 
-    # Esta linha agora terá Tab-completion!
     path = get_input("Directory to clean (default: current): ").strip()
     if path == "":
         path = "."
@@ -1226,7 +1195,6 @@ def run_symmetry_analyzer() -> None:
     print(color_text("SYMMETRY ANALYZER (stb-symmetry)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input structure file (CIF/POSCAR/SIESTA): ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
@@ -1246,19 +1214,17 @@ def run_wantibexos_interface() -> None:
     print(color_text("WANTIBEXOS INTERFACE (stb-siesta2wtb)", 'bold').center(60))
     print("="*60 + "\n")
     
-    # Esta linha agora terá Tab-completion!
     input_file = get_input("Input FDF file: ")
     while not os.path.isfile(input_file):
         print(color_text("File not found!", 'red'))
         input_file = get_input("Input FDF file: ")
     
-    # Esta linha agora terá Tab-completion!
     output_file = get_input("SIESTA output file (optional): ")
     fermi = get_input("Manual Fermi level (optional): ")
     
     args = ["--input", input_file]
     if output_file:
-        # Validação extra para o ficheiro opcional
+        # Extra validation for optional file
         if os.path.isfile(output_file):
             args.extend(["--output", output_file])
         else:

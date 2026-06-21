@@ -10,7 +10,7 @@ try:
     from importlib.metadata import version as _pkg_version
     VERSION = _pkg_version("stb_suite")
 except Exception:
-    VERSION = "1.9.5" # Atualizado versão para refletir a mudança
+    VERSION = "1.9.5"
 from stb.cli import COLORS, color_text, show_intro
 
 import os
@@ -257,7 +257,6 @@ def main():
         # Read the specified file
         S, E, V = get_siesta_data(os.path.join(folder, args.file))
         
-        # --- MODIFICAÇÃO: Imprimir status da pasta ---
         msg = f"   -> {folder:<25} : "
         if S is not None:
             if direction not in data: data[direction] = {'eps': [], 'stress': []}

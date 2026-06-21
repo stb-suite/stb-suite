@@ -20,7 +20,6 @@ import os
 import argparse
 from stb.cli import COLORS, color_text, show_intro
 
-
 # --- Color Class for UI ---
 class Cores:
     """Class to store ANSI color codes for the terminal."""
@@ -130,7 +129,6 @@ def parse_fdf_to_structure(fdf_file="struct.fdf"):
         except (ValueError, IndexError) as e:
             print(f"{Cores.YELLOW}Warning: Skipping malformed line in FDF: {line} ({e}){Cores.RESET}")
             continue
-        # --- END OF PARSER ---
 
     # Check if the coordinate format is as expected
     is_cartesian = (coords_format.lower() != "fractional")
@@ -150,7 +148,6 @@ def parse_fdf_to_structure(fdf_file="struct.fdf"):
     structure = Structure(lattice, atom_species_names, atom_coords, coords_are_cartesian=is_cartesian)
     
     return structure
-
 
 def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_filename="kpath_bs.fdf"):
     """
@@ -192,7 +189,6 @@ def write_siesta_kpath_file(kpoints_dict, path_segments, num_points=50, output_f
                 # Add ALL points from the new segment
                 path_sequence.extend(segment_list)
     
-    # --- END OF CORRECTION ---
     
     if not path_sequence:
         print(f"  {Cores.RED}Error: Could not determine path sequence.{Cores.RESET}")
@@ -277,10 +273,7 @@ def write_siesta_kpath_file_fixed(kpoints_dict, path_sequence, num_points, outpu
         print(f"  {Cores.GREEN}Success:{Cores.RESET} SIESTA file '{Cores.BOLD}{output_filename}{Cores.RESET}' has been created (with label fix).")
     except Exception as e:
         print(f"  {Cores.RED}Error during retry: {e}{Cores.RESET}")
-# --- END OF SIESTA WRITE FUNCTIONS ---
 
-
-# --- NEW FUNCTION FOR VASP KPOINTS ---
 def write_vasp_kpoints_file(kpoints_dict, path_segments, num_points=50, output_filename="KPOINTS"):
     """
     Writes the k-path to a VASP-formatted KPOINTS file for band structure.
@@ -358,8 +351,6 @@ def write_vasp_kpoints_file(kpoints_dict, path_segments, num_points=50, output_f
          print(f"  {Cores.RED}Available labels: {list(kpoints_dict_fixed.keys())}{Cores.RESET}")
     except Exception as e:
         print(f"  {Cores.RED}Error writing {output_filename}: {e}{Cores.RESET}")
-# --- END OF VASP WRITE FUNCTION ---
-
 
 def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, write_kpoints_file=False): 
     """
@@ -388,7 +379,6 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
         print(f"  {Cores.CYAN}Space Group:{Cores.RESET} {Cores.BOLD}{space_group_symbol} (No. {space_group_number}){Cores.RESET}")
         print(f"  {Cores.CYAN}Bravais Lattice:{Cores.RESET} {bravais_lattice}")
         print(f"  {Cores.YELLOW}Using precision (symprec):{Cores.RESET} {symprec}")
-
 
         print(f"\n{Cores.BOLD}--- 2. High-Symmetry K-Points (Fractional Coordinates) ---{Cores.RESET}")
         kpoints = kpath.kpath['kpoints']
@@ -421,7 +411,6 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
         print(f"    High-throughput electronic band structure calculations: Challenges and tools.")
         print(f"    Computational Materials Science, 49(2), 299-312.")
         print(f"    DOI: 10.1016/j.commatsci.2010.05.010")
-        # --- END OF REFERENCE ---
         
         num_points_per_segment = 50 
         
@@ -445,13 +434,11 @@ def get_kpath_from_structure(structure, symprec=0.01, write_fdf_file=False, writ
                 num_points_per_segment, 
                 "KPOINTS" # Output filename
             )
-        # --- END OF GENERATION ---
 
     except Exception as e:
         print(f"\n{Cores.RED}An error occurred while analyzing the structure: {e}{Cores.RESET}")
         print(f"{Cores.YELLOW}It might be necessary to adjust the 'symprec' parameter (current: {symprec}).{Cores.RESET}")
         print(f"{Cores.YELLOW}This often happens if the input structure is distorted or the FDF/POSCAR parse failed.{Cores.RESET}")
-
 
 def main():
     
@@ -498,13 +485,11 @@ Uses the Setyawan & Curtarolo (2010) methodology via Pymatgen.""",
 
     args = parser.parse_args()
 
-
     if args.intro == True:
         show_intro()
 
     print("\n" + color_text("Suggested k-path from structure (only bulk):", 'bold'))
     print("-"*60)
-
 
     # Read the arguments provided on the command line
     args = parser.parse_args()

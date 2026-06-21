@@ -123,7 +123,6 @@ def filter_data(inp_file, kernel):
         
     # Documentation: Returns the complete array with the energy and all filtered columns.
     return filtered_data_final
-# --- END OF CORRECTIONS ---
 
 def main():
     parser = argparse.ArgumentParser(description="Apply the Gaussian Convolution in DOS.")
