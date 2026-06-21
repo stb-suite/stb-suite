@@ -20,17 +20,7 @@ import os
 import shutil
 import argparse
 
-COLORS = {                          
-    'reset': '\033[0m',             
-    'cyan': '\033[96m',   
-    'blue': '\033[94m',   
-    'green': '\033[92m',  
-    'yellow': '\033[93m', 
-    'red': '\033[91m',    
-    'bold': '\033[1m',    
-    'underline': '\033[4m'
-}                         
-                          
+
 
 def parse_structure_fdf(filename):
     """
@@ -146,7 +136,6 @@ def copy_pseudopotentials(species_list, pp_path):
             except Exception as e:
                 warnings.append(f"  [ERROR] Failed to copy {psml_filename}: {e}")
                 
-        # Se não tiver .psml, tenta o .psf (prioridade 2)
         elif os.path.exists(source_psf):
             try:
                 shutil.copy2(source_psf, dest_psf)
@@ -155,7 +144,6 @@ def copy_pseudopotentials(species_list, pp_path):
             except Exception as e:
                 warnings.append(f"  [ERROR] Failed to copy {psf_filename}: {e}")
                 
-        # Nenhum dos dois foi encontrado
         else:
             warnings.append(f"  [WARNING] Neither {psml_filename} nor {psf_filename} found in {pp_path}")
 

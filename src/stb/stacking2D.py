@@ -418,7 +418,6 @@ def main():
         print(color_text(f"  Final Heterostructure Summary: [{name}]", 'bold'))
         print(color_text("=" * 60, 'blue'))
         
-        # Extrai a simetria rapidamente para o sumário
         try:
             sga_het = SpacegroupAnalyzer(hetero, symprec=args.symprec)
             het_sg = f"{sga_het.get_space_group_symbol()} ({sga_het.get_space_group_number()})"
@@ -427,7 +426,6 @@ def main():
         except Exception as e:
             sym_str = f"Analysis failed ({e})"
 
-        # Formatação com padding para alinhamento vertical perfeito
         print(f"{'Formula':<26}: {color_text(hetero.composition.reduced_formula, 'yellow')}")
         print(f"{'Total Atoms':<26}: {color_text(str(len(hetero)), 'yellow')}")
         print(f"{'Lattice C Parameter':<26}: {color_text(f'{hetero.lattice.c:.2f} Å', 'yellow')} (Vacuum Corrected)")
@@ -444,7 +442,6 @@ def main():
         
         export_to_fdf(hetero, out_filename)
         
-        # Evita poluir o terminal com várias tabelas grandes no modo batch
         print_to_stdout = not is_multi_output
         analyze_and_report_symmetry(layer1, layer2, hetero, filename=sym_filename, symprec=args.symprec, print_stdout=print_to_stdout)
 

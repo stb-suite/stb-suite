@@ -23,8 +23,8 @@ from phonopy.interface.siesta import read_siesta, write_siesta
 
 def get_required_pseudos(symbols: list, pseudo_dir: str):
     """
-    Verifica se os pseudopotenciais existem no diretório fornecido.
-    Retorna a lista de caminhos encontrados e a lista de elementos ausentes.
+    Checks whether pseudopotentials exist in the given directory.
+    Returns the list of found paths and the list of missing elements.
     """
     unique_elements = set(symbols)
     found_pseudos = []
@@ -74,14 +74,13 @@ def main():
 
     args = parser.parse_args()
 
-    # Exibe a introdução se a flag não for acionada
     if args.intro:
         show_intro()
 
     print("\n" + color_text("PHONON CALCULATION (VIA PHONOPY):", 'bold'))
     print("-"*60)
 
-    # 1. Validação de arquivos de entrada
+    # 1. Validate input files
     print("\n[INFO] Validating input files ...")
     if not os.path.exists(args.structure):
         print(color_text(f"[ERROR] Structure file '{args.structure}' not found in the current directory.", 'red'))
@@ -90,7 +89,7 @@ def main():
         print(color_text(f"[ERROR] Calculation file '{args.calc}' not found in the current directory.", 'red'))
         sys.exit(1)
 
-    # 2. Leitura da estrutura
+    # 2. Read structure
     print(f"[INFO] Reading unit cell from '{args.structure}' ...")
     try:
         unitcell = read_siesta(args.structure)
@@ -98,7 +97,7 @@ def main():
         print(color_text(f"[ERROR] Failed to read {args.structure}. Make sure it's properly formatted.\nDetails: {e}", 'red'))
         sys.exit(1)
 
-    # 3. Extração e validação de Pseudopotenciais
+    # 3. Extract and validate pseudopotentials
     symbols = unitcell.symbols
     unique_elements = list(set(symbols))
     print(f"[INFO] Elements found in unit cell: {', '.join(unique_elements)}")
@@ -113,7 +112,7 @@ def main():
         
     print(f"[INFO] Found all required pseudopotentials: {', '.join([os.path.basename(p) for p in pseudos_to_copy])}")
 
-    # 4. Inicialização do Phonopy
+    # 4. Initialize Phonopy
     print(f"[INFO] Generating supercell {args.dim} with {args.distance} Å displacements ...")
     supercell_matrix = [
         [args.dim[0], 0, 0], 
@@ -125,7 +124,7 @@ def main():
     phonon.generate_displacements(distance=args.distance)
     supercells = phonon.supercells_with_displacements
 
-    # 5. Criação dos diretórios e cópia
+    # 5. Create displacement directories and copy files
     output_root = "phonon_runs"
     os.makedirs(output_root, exist_ok=True)
     
@@ -138,19 +137,19 @@ def main():
         folder_name = os.path.join(output_root, f"disp-{i+1:03d}")
         os.makedirs(folder_name, exist_ok=True)
         
-        # A. Escreve a supercélula deslocada
+        # A. Write displaced supercell
         disp_struct_path = os.path.join(folder_name, args.structure)
         write_siesta(disp_struct_path, scell)
-        
-        # B. Copia o calc.fdf
+
+        # B. Copy calc.fdf
         shutil.copy(args.calc, os.path.join(folder_name, args.calc))
-        
-        # C. Copia apenas os pseudopotenciais exigidos
+
+        # C. Copy only the required pseudopotentials
         for pseudo_path in pseudos_to_copy:
             pseudo_filename = os.path.basename(pseudo_path)
             shutil.copy(pseudo_path, os.path.join(folder_name, pseudo_filename))
 
-    # 6. Salvar metadados do Phonopy
+    # 6. Save Phonopy metadata
     yaml_path = os.path.join(output_root, "phonopy_disp.yaml")
     phonon.save(yaml_path)
     print(f"[INFO] Saved Phonopy metadata to '{yaml_path}'")

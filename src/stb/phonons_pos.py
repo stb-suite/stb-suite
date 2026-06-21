@@ -56,7 +56,7 @@ def main():
     phonon_dir = args.directory
     system_label = args.label
 
-    # 1. Validação do Diretório
+    # 1. Validate directory
     print(f"\n[INFO] Validating phonon directory '{phonon_dir}' ...")
     if not os.path.exists(phonon_dir):
         print(color_text(f"[ERROR] Directory '{phonon_dir}' not found.", 'red'))
@@ -67,7 +67,7 @@ def main():
         print(color_text(f"[ERROR] '{yaml_file}' not found. Did you run the displacement generator?", 'red'))
         sys.exit(1)
 
-    # 2. Extração de Forças (Criando FORCE_SETS)
+    # 2. Extract forces (build FORCE_SETS)
     print(f"[INFO] Extracting forces from .FA files with label '{system_label}' ...")
     fa_files_abs = sorted(glob.glob(os.path.join(phonon_dir, "disp-*", f"{system_label}.FA")))
     
@@ -76,24 +76,21 @@ def main():
         print(color_text("Make sure SIESTA calculations finished successfully.", 'yellow'))
         sys.exit(1)
 
-    # Pegamos os caminhos relativos ao phonon_dir para rodar o comando lá dentro
     fa_files_rel = [os.path.relpath(f, phonon_dir) for f in fa_files_abs]
     print(f"[INFO] Found {len(fa_files_rel)} force files. Generating FORCE_SETS...")
     
     cmd = ["phonopy", "--siesta", "-f"] + fa_files_rel
     
     try:
-        # Roda o comando de extração de forças DENTRO da pasta phonon_runs
         subprocess.check_call(cmd, cwd=phonon_dir, stdout=subprocess.DEVNULL)
         print(color_text("[SUCCESS] FORCE_SETS generated successfully.", 'green'))
     except subprocess.CalledProcessError as e:
         print(color_text(f"[ERROR] Failed to generate FORCE_SETS. Phonopy error: {e}", 'red'))
         sys.exit(1)
 
-    # 3. Propriedades Térmicas usando a API Python do Phonopy
+    # 3. Thermal properties via Phonopy Python API
     print(f"\n[INFO] Initializing Phonopy API and loading FORCE_SETS ...")
     try:
-        # Como o yaml e o FORCE_SETS estão na mesma pasta, precisamos avisar o phonopy ou mudar o dir de execução
         os.chdir(phonon_dir)
         phonon = phonopy.load("phonopy_disp.yaml")
     except Exception as e:
@@ -107,7 +104,7 @@ def main():
     phonon.run_mesh(args.mesh)
     phonon.run_thermal_properties(t_min=args.tmin, t_max=args.tmax, t_step=args.tstep)
 
-    # 4. Salvando Gráficos e Dados
+    # 4. Save plots and data
     print("[INFO] Exporting results ...")
     
     tp_plot = phonon.plot_thermal_properties()
@@ -129,7 +126,6 @@ def main():
             
     print(color_text(f" -> Saved raw data as '{os.path.join(phonon_dir, dat_filename)}'", 'cyan'))
     
-    # Retorna ao diretório original
     os.chdir("..")
 
     print("\n" + "-" * 60)
